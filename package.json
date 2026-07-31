@@ -1,0 +1,14 @@
+{
+  "name": "multi-step-research-agent",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:web": "npm --prefix apps/web run dev",
+    "build:web": "npm --prefix apps/web run build",
+    "start:web": "npm --prefix apps/web run start",
+    "dev:api": "cd apps/api && uvicorn app.main:app --reload --port 8000"
+  },
+  "workspaces": [
+    "apps/web"
+  ]
+}
