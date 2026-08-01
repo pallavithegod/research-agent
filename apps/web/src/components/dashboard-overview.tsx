@@ -25,6 +25,20 @@ type JobRecord = {
   created_at?: string;
 };
 
+type JobDetailResponse = {
+  job: JobRecord;
+  report?: ReportRecord | null;
+};
+
+type ReportRecord = {
+  id: string;
+  title: string;
+  summary: string;
+  markdown: string;
+  limitations?: string[];
+  citations?: Array<{ id: string; claim: string; confidence: number }>;
+};
+
 type WorkflowTemplate = {
   id: string;
   name: string;
@@ -83,6 +97,9 @@ export function DashboardOverview() {
   const [maxSpend, setMaxSpend] = useState("5.00");
   const [createStatus, setCreateStatus] = useState<"idle" | "submitting" | "created" | "error">("idle");
   const [createMessage, setCreateMessage] = useState("");
+  const [currentJob, setCurrentJob] = useState<JobRecord | null>(null);
+  const [runEvents, setRunEvents] = useState<Array<{ type: string; message: string }>>([]);
+  const [report, setReport] = useState<ReportRecord | null>(null);
   const apiFetch = useAuthenticatedApi();
 
   async function loadDashboardData(shouldApply = () => true) {
@@ -170,12 +187,103 @@ export function DashboardOverview() {
       }
 
       const result = (await response.json()) as { job?: JobRecord };
+      const createdJob = result.job;
+      if (!createdJob) {
+        throw new Error("The API did not return the created job.");
+      }
+
+      setCurrentJob(createdJob);
+      setRunEvents([{ type: "planned", message: "Research plan created." }]);
       setCreateStatus("created");
-      setCreateMessage(result.job ? `Created job ${result.job.id}` : "Research job created.");
+      setCreateMessage(`Created job ${createdJob.id}. Starting run...`);
+
+      const runResponse = await apiFetch(`/v1/jobs/${createdJob.id}/run`, {
+        method: "POST",
+      });
+      if (!runResponse.ok) {
+        const errorText = await runResponse.text();
+        throw new Error(errorText || `Run API returned ${runResponse.status}`);
+      }
+
+      await collectJobEvents(createdJob.id);
+
+      const detailResponse = await apiFetch(`/v1/jobs/${createdJob.id}`);
+      if (!detailResponse.ok) {
+        const errorText = await detailResponse.text();
+        throw new Error(errorText || `Job detail API returned ${detailResponse.status}`);
+      }
+
+      const detail = (await detailResponse.json()) as JobDetailResponse;
+      setCurrentJob(detail.job);
+
+      if (detail.job.report_id) {
+        const reportResponse = await apiFetch(`/v1/reports/${detail.job.report_id}`);
+        if (!reportResponse.ok) {
+          const errorText = await reportResponse.text();
+          throw new Error(errorText || `Report API returned ${reportResponse.status}`);
+        }
+        const reportPayload = (await reportResponse.json()) as { report: ReportRecord };
+        setReport(reportPayload.report);
+      } else {
+        setReport(detail.report ?? null);
+      }
+
+      setCreateMessage(`Run completed for job ${createdJob.id}.`);
       await loadDashboardData();
     } catch (error) {
       setCreateStatus("error");
       setCreateMessage(error instanceof Error ? error.message : "Could not create research job.");
+    }
+  }
+
+  async function collectJobEvents(jobId: string) {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 1400);
+
+    try {
+      const response = await apiFetch(`/v1/jobs/${jobId}/events`, {
+        headers: { Accept: "text/event-stream" },
+        signal: controller.signal,
+      });
+      const reader = response.body?.getReader();
+      if (!reader) return;
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      const events: Array<{ type: string; message: string }> = [];
+
+      while (events.length < 8) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const chunks = buffer.split("\n\n");
+        buffer = chunks.pop() ?? "";
+
+        for (const chunk of chunks) {
+          const type = chunk.match(/^event:\s*(.+)$/m)?.[1] ?? "event";
+          const data = chunk.match(/^data:\s*(.+)$/m)?.[1];
+          if (!data) continue;
+          try {
+            const parsed = JSON.parse(data) as { message?: string };
+            events.push({ type, message: parsed.message ?? type });
+          } catch {
+            events.push({ type, message: data });
+          }
+        }
+
+        if (events.length >= 3) break;
+      }
+
+      if (events.length > 0) {
+        setRunEvents(events);
+      }
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) {
+        setRunEvents((current) => [...current, { type: "events_error", message: "Could not stream job events." }]);
+      }
+    } finally {
+      window.clearTimeout(timeout);
+      controller.abort();
     }
   }
 
@@ -208,7 +316,7 @@ export function DashboardOverview() {
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#67e8bd]">New research run</p>
               <h2 className="mt-2 text-base font-semibold text-white">Create a planned backend job</h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#aaa]">
-                This submits a real `POST /v1/jobs` request. The backend creates a research plan and the overview refreshes from live job data.
+                This submits a real job, starts the run, streams backend events, and fetches the generated report.
               </p>
             </div>
             <span className="rounded border border-[#343434] px-3 py-1 text-xs font-semibold text-[#aaa]">
@@ -244,7 +352,7 @@ export function DashboardOverview() {
                 className="mori-button mori-button-sm inline-flex h-11 w-full items-center gap-2 disabled:cursor-not-allowed disabled:opacity-60 xl:w-auto"
               >
                 <Network size={16} />
-                {createStatus === "submitting" ? "Creating..." : "Create job"}
+                {createStatus === "submitting" ? "Running..." : "Create and run"}
               </button>
             </div>
           </form>
@@ -255,6 +363,55 @@ export function DashboardOverview() {
             </p>
           ) : null}
         </section>
+
+        {(currentJob || runEvents.length > 0 || report) ? (
+          <section className="mt-6 grid gap-4 xl:grid-cols-[0.42fr_0.58fr]">
+            <div className="rounded border border-[#333] bg-[#242424] p-5">
+              <h2 className="text-base font-semibold">Run status</h2>
+              {currentJob ? (
+                <div className="mt-5 rounded border border-[#333] bg-[#202020] p-4 text-sm">
+                  <Row label="Job ID" value={currentJob.id} />
+                  <div className="mt-2">
+                    <Row label="Status" value={currentJob.status} />
+                  </div>
+                  <p className="mt-4 text-xs leading-5 text-[#aaa]">{currentJob.query}</p>
+                </div>
+              ) : null}
+              <div className="mt-5 grid gap-3">
+                {runEvents.map((event, index) => (
+                  <div key={`${event.type}-${index}`} className="flex items-start gap-2 rounded border border-[#333] bg-[#202020] p-3 text-sm">
+                    <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[#67e8bd]" />
+                    <span>
+                      <span className="block font-medium text-white">{formatActivity(event.type)}</span>
+                      <span className="block text-xs leading-5 text-[#aaa]">{event.message}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded border border-[#333] bg-[#242424] p-5">
+              <h2 className="text-base font-semibold">Generated report</h2>
+              {report ? (
+                <div className="mt-5 rounded border border-[#333] bg-[#202020] p-4">
+                  <p className="text-lg font-semibold text-white">{report.title}</p>
+                  <p className="mt-2 text-sm leading-6 text-[#aaa]">{report.summary}</p>
+                  <pre className="mt-4 max-h-56 overflow-auto rounded border border-[#303030] bg-[#181818] p-3 whitespace-pre-wrap font-mono text-xs leading-5 text-[#cfcfcf]">
+                    {report.markdown}
+                  </pre>
+                  <div className="mt-4 flex flex-wrap gap-2 text-xs text-[#aaa]">
+                    <span className="rounded border border-[#333] px-2 py-1">{report.citations?.length ?? 0} citations</span>
+                    <span className="rounded border border-[#333] px-2 py-1">{report.limitations?.length ?? 0} limitations</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-5 rounded border border-[#333] bg-[#202020] p-4 text-sm text-[#aaa]">
+                  The report will appear here after the run completes.
+                </p>
+              )}
+            </div>
+          </section>
+        ) : null}
 
         <section className="mt-6 grid gap-4 lg:grid-cols-2">
           <div className="rounded border border-[#333] bg-[#242424] p-5">
