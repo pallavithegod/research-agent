@@ -3,6 +3,7 @@
 import { ArrowRight, CheckCircle2, CircleDollarSign, Copy, FileText, KeyRound, Network, Search, ShieldCheck, Terminal } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { ClerkApiStatus } from "@/components/clerk-api-status";
 import { SoftDashboardEnhancements } from "@/components/soft-dashboard-sections";
 
 type DashboardPayload = {
@@ -84,6 +85,8 @@ export function DashboardOverview() {
             </a>
           </div>
         </section>
+
+        <ClerkApiStatus />
 
         <section className="mt-6 grid gap-4 lg:grid-cols-2">
           <div className="rounded border border-[#333] bg-[#242424] p-5">

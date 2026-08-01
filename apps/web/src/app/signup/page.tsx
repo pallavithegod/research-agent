@@ -1,9 +1,9 @@
-import { SignIn } from "@clerk/nextjs";
+import { SignUp } from "@clerk/nextjs";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function SignInPage() {
+export default function SignUpPage() {
   return (
     <main id="main" className="relative min-h-screen overflow-hidden bg-[#eef6fb] text-[#171111]">
       <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/login-back.jpg')" }} aria-hidden="true" />
@@ -17,9 +17,9 @@ export default function SignInPage() {
           Research Agent
         </Link>
 
-        <Link href="/" className="hidden items-center gap-2 text-sm font-semibold text-[#332323]/64 transition hover:text-[#332323] sm:inline-flex">
+        <Link href="/signin" className="hidden items-center gap-2 text-sm font-semibold text-[#332323]/64 transition hover:text-[#332323] sm:inline-flex">
           <ArrowLeft className="size-4" />
-          Back
+          Sign in
         </Link>
       </header>
 
@@ -29,16 +29,16 @@ export default function SignInPage() {
             <div className="mx-auto grid size-14 place-items-center rounded-2xl border border-white/80 bg-white/88 text-[#201819] shadow-[0_12px_28px_rgba(44,57,72,0.12)]">
               <ShieldCheck className="size-7" />
             </div>
-            <h1 className="mt-6 font-inter text-2xl font-black tracking-tight text-[#171111]">Sign in</h1>
+            <h1 className="mt-6 font-inter text-2xl font-black tracking-tight text-[#171111]">Create workspace</h1>
             <p className="mx-auto mt-2 max-w-[280px] text-sm leading-6 text-[#6b5757]">
-              Authenticate with Clerk to open the Multi-Step Research Agent dashboard.
+              Create a Clerk account for the research orchestration workspace.
             </p>
           </div>
 
-          <SignIn
+          <SignUp
             routing="path"
-            path="/signin"
-            signUpUrl="/signup"
+            path="/signup"
+            signInUrl="/signin"
             forceRedirectUrl="/"
             appearance={{
               elements: {

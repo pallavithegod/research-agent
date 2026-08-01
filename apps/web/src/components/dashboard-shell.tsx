@@ -1,5 +1,6 @@
 "use client";
 
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import {
   BarChart3,
   BookOpen,
@@ -148,9 +149,17 @@ function TopBar({ user }: { user: DashboardUser }) {
             <BookOpen size={17} />
             Docs
           </Link>
-          <span className="hidden rounded border border-[#343434] px-2 py-1 text-xs text-[#d9d9d9] sm:inline-flex">
-            {user.name}
-          </span>
+          <SignedIn>
+            <span className="hidden rounded border border-[#343434] px-2 py-1 text-xs text-[#d9d9d9] sm:inline-flex">
+              {user.name}
+            </span>
+            <UserButton afterSignOutUrl="/signin" />
+          </SignedIn>
+          <SignedOut>
+            <Link href="/signin" className="mori-button mori-button-sm inline-flex">
+              Sign in
+            </Link>
+          </SignedOut>
         </div>
       </div>
     </header>
