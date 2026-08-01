@@ -2,6 +2,9 @@
 .env
 .env.*
 !.env.example
+apps/web/.env.local
+apps/web/.env
+apps/api/.env
 
 # Node / Next.js
 node_modules/
@@ -40,3 +43,4 @@ Thumbs.db
 # Local artifacts
 *.local
 coverage/
+implementation_guide.md

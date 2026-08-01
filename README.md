@@ -18,6 +18,7 @@ Frontend:
 ```powershell
 cd "D:\temp\grp proj 3\project-dashboard"
 npm install
+Copy-Item "apps\web\.env.example" "apps\web\.env.local"
 npm run dev:web
 ```
 
@@ -42,4 +43,12 @@ Health: http://localhost:8000/v1/health
 
 ## Auth
 
-The API is prepared for Clerk, not Firebase. Local mock auth is enabled while `AUTH_REQUIRED=false`.
+The frontend uses Clerk for `/signin` and `/signup`. The API is prepared for Clerk JWT validation, not Firebase.
+
+For local setup:
+
+1. Create a Clerk app manually in the Clerk dashboard.
+2. Add the Clerk keys to `apps/web/.env.local`.
+3. Keep `apps/api/.env` with `AUTH_REQUIRED=false` for first local testing, or set Clerk issuer/JWKS values when you want strict backend token validation.
+
+Detailed local steps are in `implementation_guide.md`, which is intentionally gitignored.
