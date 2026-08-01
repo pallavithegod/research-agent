@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight, CheckCircle2, CircleDollarSign, Copy, FileText, KeyRound, Network, Search, ShieldCheck, Terminal } from "lucide-react";
-import type { ReactNode } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { ClerkApiStatus } from "@/components/clerk-api-status";
 import { SoftDashboardEnhancements } from "@/components/soft-dashboard-sections";
@@ -79,54 +79,105 @@ export function DashboardOverview() {
   const [copied, setCopied] = useState("");
   const [payload, setPayload] = useState<DashboardPayload>(fallbackPayload);
   const [dataStatus, setDataStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [query, setQuery] = useState("Compare 24 GB RAM laptops under $1,500 and cite the best three.");
+  const [maxSpend, setMaxSpend] = useState("5.00");
+  const [createStatus, setCreateStatus] = useState<"idle" | "submitting" | "created" | "error">("idle");
+  const [createMessage, setCreateMessage] = useState("");
   const apiFetch = useAuthenticatedApi();
+
+  async function loadDashboardData(shouldApply = () => true) {
+    setDataStatus("loading");
+    try {
+      const [meResponse, jobsResponse, workflowsResponse] = await Promise.all([
+        apiFetch("/v1/auth/me"),
+        apiFetch("/v1/jobs"),
+        apiFetch("/v1/workflows"),
+      ]);
+
+      if (!meResponse.ok || !jobsResponse.ok || !workflowsResponse.ok) {
+        throw new Error("Dashboard API request failed");
+      }
+
+      const jobsPayload = (await jobsResponse.json()) as { data: JobRecord[] };
+      const workflowsPayload = (await workflowsResponse.json()) as { data: WorkflowTemplate[] };
+      const jobs = jobsPayload.data ?? [];
+      const workflows = workflowsPayload.data ?? [];
+
+      if (!shouldApply()) return;
+
+      setPayload({
+        ...fallbackPayload,
+        activeRuns: countActiveRuns(jobs),
+        connectedApis: countConnectedServices(workflows),
+        reportCount: jobs.filter((job) => job.report_id || job.status === "succeeded").length,
+        recentActivity: buildRecentActivity(jobs),
+      });
+      setDataStatus("ready");
+    } catch {
+      if (!shouldApply()) {
+        return;
+      }
+      setPayload(fallbackPayload);
+      setDataStatus("error");
+    }
+  }
 
   useEffect(() => {
     let active = true;
 
-    async function loadDashboardData() {
-      setDataStatus("loading");
-      try {
-        const [meResponse, jobsResponse, workflowsResponse] = await Promise.all([
-          apiFetch("/v1/auth/me"),
-          apiFetch("/v1/jobs"),
-          apiFetch("/v1/workflows"),
-        ]);
-
-        if (!meResponse.ok || !jobsResponse.ok || !workflowsResponse.ok) {
-          throw new Error("Dashboard API request failed");
-        }
-
-        const jobsPayload = (await jobsResponse.json()) as { data: JobRecord[] };
-        const workflowsPayload = (await workflowsResponse.json()) as { data: WorkflowTemplate[] };
-        const jobs = jobsPayload.data ?? [];
-        const workflows = workflowsPayload.data ?? [];
-
-        if (!active) return;
-
-        setPayload({
-          ...fallbackPayload,
-          activeRuns: countActiveRuns(jobs),
-          connectedApis: countConnectedServices(workflows),
-          reportCount: jobs.filter((job) => job.report_id || job.status === "succeeded").length,
-          recentActivity: buildRecentActivity(jobs),
-        });
-        setDataStatus("ready");
-      } catch {
-        if (!active) {
-          return;
-        }
-        setPayload(fallbackPayload);
-        setDataStatus("error");
-      }
-    }
-
-    void loadDashboardData();
+    void loadDashboardData(() => active);
 
     return () => {
       active = false;
     };
   }, [apiFetch]);
+
+  async function createResearchJob(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const cleanQuery = query.trim();
+    const cleanSpend = maxSpend.trim();
+
+    if (cleanQuery.length < 4) {
+      setCreateStatus("error");
+      setCreateMessage("Enter a research question with at least 4 characters.");
+      return;
+    }
+
+    setCreateStatus("submitting");
+    setCreateMessage("");
+
+    try {
+      const response = await apiFetch("/v1/jobs", {
+        method: "POST",
+        body: JSON.stringify({
+          query: cleanQuery,
+          locale: "en-US",
+          trusted_sources: [],
+          output_format: "markdown",
+          max_spend: {
+            amount: cleanSpend || "5.00",
+            asset: "USDC",
+            network: "base-sepolia",
+          },
+          require_citations: true,
+          template: "product_research",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `API returned ${response.status}`);
+      }
+
+      const result = (await response.json()) as { job?: JobRecord };
+      setCreateStatus("created");
+      setCreateMessage(result.job ? `Created job ${result.job.id}` : "Research job created.");
+      await loadDashboardData();
+    } catch (error) {
+      setCreateStatus("error");
+      setCreateMessage(error instanceof Error ? error.message : "Could not create research job.");
+    }
+  }
 
   return (
     <div id="overview" className="min-h-[calc(100vh-48px)] bg-[#181818] px-4 py-6 text-white sm:px-6 lg:px-8">
@@ -150,6 +201,60 @@ export function DashboardOverview() {
         </section>
 
         <ClerkApiStatus />
+
+        <section className="mt-6 rounded border border-[#333] bg-[#242424] p-5">
+          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#67e8bd]">New research run</p>
+              <h2 className="mt-2 text-base font-semibold text-white">Create a planned backend job</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#aaa]">
+                This submits a real `POST /v1/jobs` request. The backend creates a research plan and the overview refreshes from live job data.
+              </p>
+            </div>
+            <span className="rounded border border-[#343434] px-3 py-1 text-xs font-semibold text-[#aaa]">
+              x402 sandbox budget
+            </span>
+          </div>
+
+          <form onSubmit={createResearchJob} className="mt-5 grid gap-3 xl:grid-cols-[1fr_140px_auto]">
+            <label className="grid gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8f8f8f]">Research query</span>
+              <textarea
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                rows={3}
+                className="min-h-24 resize-none rounded border border-[#3a3a3a] bg-[#181818] px-3 py-3 text-sm leading-6 text-white outline-none transition focus:border-[#67e8bd]"
+                placeholder="Ask a research question..."
+              />
+            </label>
+            <label className="grid content-start gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8f8f8f]">Max spend</span>
+              <input
+                value={maxSpend}
+                onChange={(event) => setMaxSpend(event.target.value)}
+                inputMode="decimal"
+                className="h-11 rounded border border-[#3a3a3a] bg-[#181818] px-3 font-mono text-sm text-white outline-none transition focus:border-[#67e8bd]"
+                placeholder="5.00"
+              />
+            </label>
+            <div className="flex items-end">
+              <button
+                type="submit"
+                disabled={createStatus === "submitting"}
+                className="mori-button mori-button-sm inline-flex h-11 w-full items-center gap-2 disabled:cursor-not-allowed disabled:opacity-60 xl:w-auto"
+              >
+                <Network size={16} />
+                {createStatus === "submitting" ? "Creating..." : "Create job"}
+              </button>
+            </div>
+          </form>
+
+          {createMessage ? (
+            <p className={`mt-4 rounded border px-3 py-2 text-sm ${createStatus === "error" ? "border-[#5d3939] bg-[#2a1f1f] text-[#ffb6b6]" : "border-[#67e8bd]/40 bg-[#183029] text-[#9ff6d3]"}`}>
+              {createMessage}
+            </p>
+          ) : null}
+        </section>
 
         <section className="mt-6 grid gap-4 lg:grid-cols-2">
           <div className="rounded border border-[#333] bg-[#242424] p-5">
