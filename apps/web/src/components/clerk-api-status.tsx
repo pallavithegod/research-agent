@@ -79,20 +79,22 @@ export function ClerkApiStatus() {
 }
 
 function ApiBadge({ state }: { state: ApiState }) {
-  if (state.status === "loading" || state.status === "idle") {
-    return <span className="rounded border border-[#3a3a3a] px-3 py-1 text-xs font-semibold text-[#aaa]">Checking API</span>;
+  switch (state.status) {
+    case "loading":
+    case "idle":
+      return <span className="rounded border border-[#3a3a3a] px-3 py-1 text-xs font-semibold text-[#aaa]">Checking API</span>;
+    case "error":
+      return (
+        <span className="rounded border border-[#5d3939] bg-[#2a1f1f] px-3 py-1 text-xs font-semibold text-[#ffb6b6]">
+          API not connected: {state.message}
+        </span>
+      );
+    case "ready":
+      return (
+        <span className="inline-flex items-center gap-2 rounded border border-[#67e8bd]/40 bg-[#183029] px-3 py-1 text-xs font-semibold text-[#9ff6d3]">
+          <CheckCircle2 size={14} />
+          API verified: {state.isMock ? "local auth" : state.orgId}
+        </span>
+      );
   }
-  if (state.status === "error") {
-    return (
-      <span className="rounded border border-[#5d3939] bg-[#2a1f1f] px-3 py-1 text-xs font-semibold text-[#ffb6b6]">
-        API not connected: {state.message}
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-2 rounded border border-[#67e8bd]/40 bg-[#183029] px-3 py-1 text-xs font-semibold text-[#9ff6d3]">
-      <CheckCircle2 size={14} />
-      API verified: {state.isMock ? "local auth" : state.orgId}
-    </span>
-  );
 }
