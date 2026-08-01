@@ -44,3 +44,5 @@ Thumbs.db
 *.local
 coverage/
 implementation_guide.md
+
+/src/generated/prisma

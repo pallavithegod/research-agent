@@ -1,0 +1,71 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: npm run dev:web
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/web/.next
+    env_file:
+      - ./apps/web/.env.local
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: /signin
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: /signup
+      NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL: /
+      NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL: /
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.dev
+    command: uvicorn app.main:app --host 0.0.0.0 --reload --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/api:/app
+    env_file:
+      - ./apps/api/.env
+    environment:
+      APP_NAME: Research Agent Backend
+      ENVIRONMENT: local
+      API_PREFIX: /v1
+      FRONTEND_ORIGIN: http://localhost:3000
+      STORAGE_BACKEND: postgres
+      AUTO_CREATE_DATABASE_SCHEMA: "true"
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/research_agent
+      OBJECT_STORAGE_BUCKET: ""
+      SUPPORTED_PAYMENT_ASSETS: USDC
+      SUPPORTED_PAYMENT_NETWORKS: base-sepolia,base
+      MAX_PAYMENT_PIN_ATTEMPTS: "5"
+      PAYMENT_PIN_LOCK_SECONDS: "900"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: research_agent
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d research_agent"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
