@@ -2,9 +2,10 @@
 
 import { ArrowRight, CheckCircle2, CircleDollarSign, Copy, FileText, KeyRound, Network, Search, ShieldCheck, Terminal } from "lucide-react";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ClerkApiStatus } from "@/components/clerk-api-status";
 import { SoftDashboardEnhancements } from "@/components/soft-dashboard-sections";
+import { useAuthenticatedApi } from "@/lib/api-client";
 
 type DashboardPayload = {
   balance: string;
@@ -16,25 +17,37 @@ type DashboardPayload = {
   recentActivity: Array<{ id: string; type: string; timeLabel: string; detail: string }>;
 };
 
-const payload: DashboardPayload = {
+type JobRecord = {
+  id: string;
+  query: string;
+  status: string;
+  report_id?: string | null;
+  created_at?: string;
+};
+
+type WorkflowTemplate = {
+  id: string;
+  name: string;
+  nodes: string[];
+};
+
+const fallbackPayload: DashboardPayload = {
   balance: "$842.40",
   settledSpend: "$157.60",
   pendingSpend: "$24.20",
-  activeRuns: 6,
-  connectedApis: 8,
-  reportCount: 31,
+  activeRuns: 0,
+  connectedApis: 0,
+  reportCount: 0,
   recentActivity: [
-    { id: "act-1", type: "search_completed", timeLabel: "Jul 31, 2026, 2:25 PM", detail: "Primary web and scholar search completed for battery recycling query." },
-    { id: "act-2", type: "payment_settled", timeLabel: "Jul 31, 2026, 2:23 PM", detail: "x402 settlement cleared for fact-checking API." },
-    { id: "act-3", type: "report_compiled", timeLabel: "Jul 31, 2026, 2:18 PM", detail: "Cited briefing generated with 18 source references." },
+    { id: "empty-state", type: "ready", timeLabel: "Now", detail: "Create a research job to populate live dashboard activity." },
   ],
 };
 
 const pipelineSteps = [
-  ["1", "Decompose research query", "#planner"],
-  ["2", "Invoke search and enrichment APIs", "#apis"],
-  ["3", "Settle x402 payments automatically", "#payments"],
-  ["4", "Compile cited research report", "#reports"],
+  ["1", "Decompose research query", "/planner"],
+  ["2", "Invoke search and enrichment APIs", "/apis"],
+  ["3", "Settle x402 payments automatically", "/payments"],
+  ["4", "Compile cited research report", "/reports"],
 ];
 
 const agentConfig = `agent = "multi-step-research"
@@ -64,6 +77,56 @@ const reportExample = `{
 
 export function DashboardOverview() {
   const [copied, setCopied] = useState("");
+  const [payload, setPayload] = useState<DashboardPayload>(fallbackPayload);
+  const [dataStatus, setDataStatus] = useState<"loading" | "ready" | "error">("loading");
+  const apiFetch = useAuthenticatedApi();
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadDashboardData() {
+      setDataStatus("loading");
+      try {
+        const [meResponse, jobsResponse, workflowsResponse] = await Promise.all([
+          apiFetch("/v1/auth/me"),
+          apiFetch("/v1/jobs"),
+          apiFetch("/v1/workflows"),
+        ]);
+
+        if (!meResponse.ok || !jobsResponse.ok || !workflowsResponse.ok) {
+          throw new Error("Dashboard API request failed");
+        }
+
+        const jobsPayload = (await jobsResponse.json()) as { data: JobRecord[] };
+        const workflowsPayload = (await workflowsResponse.json()) as { data: WorkflowTemplate[] };
+        const jobs = jobsPayload.data ?? [];
+        const workflows = workflowsPayload.data ?? [];
+
+        if (!active) return;
+
+        setPayload({
+          ...fallbackPayload,
+          activeRuns: countActiveRuns(jobs),
+          connectedApis: countConnectedServices(workflows),
+          reportCount: jobs.filter((job) => job.report_id || job.status === "succeeded").length,
+          recentActivity: buildRecentActivity(jobs),
+        });
+        setDataStatus("ready");
+      } catch {
+        if (!active) {
+          return;
+        }
+        setPayload(fallbackPayload);
+        setDataStatus("error");
+      }
+    }
+
+    void loadDashboardData();
+
+    return () => {
+      active = false;
+    };
+  }, [apiFetch]);
 
   return (
     <div id="overview" className="min-h-[calc(100vh-48px)] bg-[#181818] px-4 py-6 text-white sm:px-6 lg:px-8">
@@ -75,11 +138,11 @@ export function DashboardOverview() {
             Decompose a research query into specialist tasks, invoke x402-enabled APIs, settle payments, and compile one cited report.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <a href="#planner" className="mori-button mori-button-sm inline-flex items-center gap-2">
+            <a href="/planner" className="mori-button mori-button-sm inline-flex items-center gap-2">
               <Network size={16} />
               Plan research run
             </a>
-            <a href="#apis" className="inline-flex h-9 items-center gap-2 rounded border border-[#3a3a3a] px-3 text-sm font-semibold text-[#d8d8d8] hover:bg-[#2b2b2b]">
+            <a href="/apis" className="inline-flex h-9 items-center gap-2 rounded border border-[#3a3a3a] px-3 text-sm font-semibold text-[#d8d8d8] hover:bg-[#2b2b2b]">
               <KeyRound size={16} />
               Connect paid API
             </a>
@@ -100,6 +163,7 @@ export function DashboardOverview() {
               <Row label="Pending settlements" value={payload.pendingSpend} />
               <Row label="Connected paid APIs" value={payload.connectedApis.toString()} />
             </div>
+            <DataStatus status={dataStatus} />
           </div>
 
           <div className="rounded border border-[#333] bg-[#242424] p-5">
@@ -113,6 +177,7 @@ export function DashboardOverview() {
               <Row label="Reports compiled" value={payload.reportCount.toString()} />
               <Row label="Citation policy" value="Required" />
             </div>
+            <DataStatus status={dataStatus} />
           </div>
         </section>
 
@@ -151,7 +216,7 @@ export function DashboardOverview() {
         <section className="mt-6 grid gap-4 lg:grid-cols-3">
           <MetricCard icon={<Search size={18} />} label="Search services" value="3" copy="Web, academic, and news connectors ready." />
           <MetricCard icon={<ShieldCheck size={18} />} label="Fact-checkers" value="2" copy="Claim verification and source scoring." />
-          <MetricCard icon={<FileText size={18} />} label="Report formats" value="4" copy="Briefing, memo, table, and cited dossier." />
+          <MetricCard icon={<FileText size={18} />} label="Report formats" value={payload.reportCount.toString()} copy="Compiled reports returned by the backend job API." />
         </section>
 
         <SoftDashboardEnhancements />
@@ -182,6 +247,13 @@ function MetricCard({ icon, label, value, copy }: { icon: ReactNode; label: stri
       <p className="mt-2 text-sm leading-6 text-[#aaa]">{copy}</p>
     </div>
   );
+}
+
+function DataStatus({ status }: { status: "loading" | "ready" | "error" }) {
+  const label = status === "ready" ? "Live API data" : status === "loading" ? "Loading API data" : "Using fallback data";
+  const className = status === "ready" ? "text-[#67e8bd]" : status === "loading" ? "text-[#aaa]" : "text-[#f7b500]";
+
+  return <p className={`mt-5 text-xs font-semibold uppercase tracking-[0.14em] ${className}`}>{label}</p>;
 }
 
 function AgentPromptPanel({ copied, onCopy }: { copied: string; onCopy: (value: string) => void }) {
@@ -229,4 +301,44 @@ function Snippet({ title, value, copied, onCopy }: { title: string; value: strin
 
 function formatActivity(type: string) {
   return type.replaceAll("_", " ");
+}
+
+function countActiveRuns(jobs: JobRecord[]) {
+  const terminal = new Set(["succeeded", "failed", "cancelled", "budget_exhausted"]);
+  return jobs.filter((job) => !terminal.has(job.status)).length;
+}
+
+function countConnectedServices(workflows: WorkflowTemplate[]) {
+  const providerNodes = new Set(["search", "retrieval", "fact_checking", "payment_x402", "report", "product_search"]);
+  const connected = new Set<string>();
+  workflows.forEach((workflow) => {
+    workflow.nodes.forEach((node) => {
+      if (providerNodes.has(node)) {
+        connected.add(node);
+      }
+    });
+  });
+  return connected.size;
+}
+
+function buildRecentActivity(jobs: JobRecord[]): DashboardPayload["recentActivity"] {
+  if (jobs.length === 0) {
+    return fallbackPayload.recentActivity;
+  }
+
+  return jobs
+    .slice()
+    .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))
+    .slice(0, 3)
+    .map((job) => ({
+      id: job.id,
+      type: `job_${job.status}`,
+      timeLabel: formatTimestamp(job.created_at),
+      detail: job.query,
+    }));
+}
+
+function formatTimestamp(value?: string) {
+  if (!value) return "No timestamp";
+  return value.replace("T", " ").replace(/\.\d+Z?$/, " UTC").replace("+00:00", " UTC").slice(0, 19);
 }
