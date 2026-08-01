@@ -3,6 +3,7 @@
 import { ArrowRight, CheckCircle2, CircleDollarSign, Copy, FileText, KeyRound, Network, Search, ShieldCheck, Terminal } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { SoftDashboardEnhancements } from "@/components/soft-dashboard-sections";
 
 type DashboardPayload = {
   balance: string;
@@ -149,6 +150,8 @@ export function DashboardOverview() {
           <MetricCard icon={<ShieldCheck size={18} />} label="Fact-checkers" value="2" copy="Claim verification and source scoring." />
           <MetricCard icon={<FileText size={18} />} label="Report formats" value="4" copy="Briefing, memo, table, and cited dossier." />
         </section>
+
+        <SoftDashboardEnhancements />
 
         <AgentPromptPanel copied={copied} onCopy={setCopied} />
       </div>

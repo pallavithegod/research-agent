@@ -18,4 +18,4 @@ Backend integration can be added later by replacing the mock data in `src/compon
 
 Every sidebar item and topbar dashboard link opens a standalone page:
 
-`/signin`, `/`, `/projects`, `/bounties`, `/issue-bounties`, `/leaderboard`, `/campaigns`, `/pull-requests`, `/api-keys`, `/ai-tools`, `/playground`, `/workflows`, `/marketplace`, `/rewards`, `/usage`, `/credits`, `/referral`, `/offers`, `/sponsors`, `/notifications`, `/runs`, `/planner`, `/apis`, `/payments`, `/facts`, `/enrichment`, `/reports`, and `/docs`.
+`/signin`, `/`, `/billing`, `/tables`, `/profile`, `/projects`, `/bounties`, `/issue-bounties`, `/leaderboard`, `/campaigns`, `/pull-requests`, `/api-keys`, `/ai-tools`, `/playground`, `/workflows`, `/marketplace`, `/rewards`, `/usage`, `/credits`, `/referral`, `/offers`, `/sponsors`, `/notifications`, `/runs`, `/planner`, `/apis`, `/payments`, `/facts`, `/enrichment`, `/reports`, and `/docs`.
