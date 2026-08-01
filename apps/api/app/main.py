@@ -22,8 +22,15 @@ def create_app() -> FastAPI:
     )
     app.include_router(api_router, prefix=settings.api_prefix)
     install_error_handlers(app)
+
+    @app.on_event("startup")
+    def startup() -> None:
+        if settings.storage_backend == "postgres" and settings.auto_create_database_schema:
+            from app.db.session import create_database_schema
+
+            create_database_schema()
+
     return app
 
 
 app = create_app()
-

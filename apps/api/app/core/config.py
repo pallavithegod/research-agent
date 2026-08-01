@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     auth_required: bool = False
 
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/research_agent"
+    storage_backend: str = "postgres"
+    auto_create_database_schema: bool = True
     object_storage_bucket: str = ""
 
     hmac_secret: str = "replace-with-strong-local-secret"
@@ -46,4 +48,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

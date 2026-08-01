@@ -12,6 +12,7 @@ from app.domain.schemas import (
     ResearchJob,
     Schedule,
 )
+from app.core.config import get_settings
 
 T = TypeVar("T")
 
@@ -41,4 +42,10 @@ class MemoryStore:
         return [schedule for schedule in self.schedules.values() if schedule.org_id == org_id]
 
 
-store = MemoryStore()
+settings = get_settings()
+if settings.storage_backend == "memory":
+    store = MemoryStore()
+else:
+    from app.storage.postgres import PostgresStore
+
+    store = PostgresStore()

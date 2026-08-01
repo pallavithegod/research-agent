@@ -11,7 +11,7 @@ The backend is intentionally production-shaped but local-friendly:
 - x402-ready payment approval, tool-call, payment-term, and receipt models
 - Schedules, product research, price watches, checkout-intent review gates
 - Workflow template endpoint for dashboard/canvas integration
-- In-memory storage for now, with model boundaries designed for PostgreSQL later
+- PostgreSQL-backed persistence for jobs, plans, events, reports, approvals, receipts, schedules, and Payment PIN hashes
 
 ## Manual Install
 
@@ -24,6 +24,20 @@ python -m venv .venv
 pip install -r requirements.txt
 Copy-Item ".env.example" ".env"
 uvicorn app.main:app --reload --port 8000
+```
+
+PostgreSQL must be running before the API starts. The default local database URL is:
+
+```env
+DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/research_agent
+STORAGE_BACKEND=postgres
+AUTO_CREATE_DATABASE_SCHEMA=true
+```
+
+Create the database once, using your own Postgres shell/tool:
+
+```sql
+CREATE DATABASE research_agent;
 ```
 
 Open:
@@ -58,7 +72,7 @@ Authorization: Bearer <clerk-session-token>
 
 ## Important Next Backend Steps
 
-1. Replace `app/storage/memory.py` with PostgreSQL repositories and migrations.
+1. Add Alembic migrations once the schema is normalized beyond the current persisted-record MVP.
 2. Move `OrchestratorService.run_mock_research` into a durable worker queue.
 3. Replace `ToolGatewayService.mock_payment_terms` with real x402 provider calls.
 4. Add object storage for encrypted artifacts and signed URLs.
