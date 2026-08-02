@@ -1,6 +1,6 @@
 "use client";
 
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, useClerk, useUser } from "@clerk/nextjs";
 import {
   BadgeCheck,
   BarChart3,
@@ -18,6 +18,7 @@ import {
   PanelLeftOpen,
   PlayCircle,
   PlugZap,
+  LogOut,
   ReceiptText,
   ShieldCheck,
   Sparkles,
@@ -132,10 +133,7 @@ function TopBar({ user }: { user: DashboardUser }) {
             Docs
           </Link>
           <SignedIn>
-            <span className="hidden rounded border border-[#343434] px-2 py-1 text-xs text-[#d9d9d9] sm:inline-flex">
-              {user.name}
-            </span>
-            <UserButton afterSignOutUrl="/signin" />
+            <AccountControl fallbackName={user.name} />
           </SignedIn>
           <SignedOut>
             <Link href="/signin" className="mori-button mori-button-sm inline-flex">
@@ -145,6 +143,35 @@ function TopBar({ user }: { user: DashboardUser }) {
         </div>
       </div>
     </header>
+  );
+}
+
+function AccountControl({ fallbackName }: { fallbackName: string }) {
+  const { signOut } = useClerk();
+  const { user } = useUser();
+  const displayName = user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? fallbackName;
+  const initials = displayName
+    .split(/\s|@/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "RA";
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="hidden max-w-44 items-center gap-2 rounded border border-[#343434] bg-[#181818] px-2 py-1 text-xs text-[#d9d9d9] sm:inline-flex">
+        <span className="grid size-5 shrink-0 place-items-center rounded-full bg-white text-[8px] font-black text-black">{initials}</span>
+        <span className="truncate">{displayName}</span>
+      </span>
+      <button
+        onClick={() => void signOut({ redirectUrl: "/signin" })}
+        className="grid size-8 place-items-center rounded border border-[#343434] bg-[#181818] text-[#a8a8a8] hover:bg-[#2b2b2b] hover:text-white"
+        aria-label="Sign out"
+        title="Sign out"
+      >
+        <LogOut size={15} />
+      </button>
+    </div>
   );
 }
 
