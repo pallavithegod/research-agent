@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     supported_payment_networks: str = "base-sepolia,base"
     max_payment_pin_attempts: int = 5
     payment_pin_lock_seconds: int = 900
+    log_level: str = "INFO"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
@@ -87,6 +88,8 @@ class Settings(BaseSettings):
             errors.append("DATABASE_URL must point to managed PostgreSQL in production, not local Docker.")
         if self.hmac_secret == "replace-with-strong-local-secret" or len(self.hmac_secret) < 32:
             errors.append("HMAC_SECRET must be replaced with a strong production secret.")
+        if self.log_level.upper() not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
+            errors.append("LOG_LEVEL must be DEBUG, INFO, WARNING, ERROR, or CRITICAL.")
 
         if errors:
             raise ValueError("Invalid production configuration: " + " ".join(errors))
