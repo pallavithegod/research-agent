@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/research_agent"
     storage_backend: str = "postgres"
-    auto_create_database_schema: bool = True
+    auto_create_database_schema: bool = False
     object_storage_bucket: str = ""
 
     hmac_secret: str = "replace-with-strong-local-secret"

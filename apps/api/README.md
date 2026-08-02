@@ -40,6 +40,18 @@ Create the database once, using your own Postgres shell/tool:
 CREATE DATABASE research_agent;
 ```
 
+For production, run migrations instead of automatic schema creation:
+
+```env
+AUTO_CREATE_DATABASE_SCHEMA=false
+```
+
+Then apply migrations from this folder:
+
+```powershell
+alembic upgrade head
+```
+
 Open:
 
 ```text
@@ -72,7 +84,7 @@ Authorization: Bearer <clerk-session-token>
 
 ## Important Next Backend Steps
 
-1. Add Alembic migrations once the schema is normalized beyond the current persisted-record MVP.
+1. Normalize the persisted-record MVP into dedicated tables for jobs, steps, reports, citations, evidence, provider calls, approvals, and receipts.
 2. Move `OrchestratorService.run_mock_research` into a durable worker queue.
 3. Replace `ToolGatewayService.mock_payment_terms` with real x402 provider calls.
 4. Add object storage for encrypted artifacts and signed URLs.
