@@ -16,9 +16,9 @@ def main() -> int:
     args = parser.parse_args()
 
     runner = SmokeRunner(api_url=args.api_url, token=args.token, timeout=args.timeout)
-    runner.check_health()
+    health = runner.check_health()
     runner.check_auth_me()
-    if not args.skip_flow:
+    if not args.skip_flow and not runner.should_skip_protected_flow(health):
         runner.check_research_flow()
     runner.summary()
     return 0 if not runner.failures else 1
@@ -38,13 +38,20 @@ class SmokeRunner:
             headers["Authorization"] = f"Bearer {self.token}"
         return headers
 
-    def check_health(self) -> None:
+    def check_health(self) -> dict[str, Any] | None:
         payload = self._get_json("/v1/health", expected=(200,), label="health")
         if not payload:
-            return
+            return None
         self._ok(f"health ok: environment={payload.get('environment')} queue={payload.get('job_queue_backend')}")
         if payload.get("auth_required") and not self.token:
-            self._warn("auth is required but no token was provided; protected smoke checks will fail or be skipped")
+            self._warn("auth is required but no token was provided; protected flow checks will be skipped")
+        return payload
+
+    def should_skip_protected_flow(self, health: dict[str, Any] | None) -> bool:
+        if health and health.get("auth_required") and not self.token:
+            self._warn("skipping job flow because AUTH_REQUIRED=true and no --token was provided")
+            return True
+        return False
 
     def check_auth_me(self) -> None:
         payload = self._get_json("/v1/auth/me", expected=(200, 401), label="auth")

@@ -127,6 +127,7 @@ def configure_logging(settings: Settings) -> None:
         logging.getLogger(logger_name).handlers.clear()
         logging.getLogger(logger_name).propagate = True
 
+    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
 
