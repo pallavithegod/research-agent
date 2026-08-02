@@ -44,6 +44,7 @@ For production, run migrations instead of automatic schema creation:
 
 ```env
 AUTO_CREATE_DATABASE_SCHEMA=false
+MIGRATIONS_DATABASE_URL=postgresql+psycopg://...
 ```
 
 Then apply migrations from this folder:
