@@ -1,6 +1,6 @@
 "use client";
 
-import { SignedIn, SignedOut, useClerk, useUser } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import {
   BadgeCheck,
   BarChart3,
@@ -48,6 +48,8 @@ const demoUser: DashboardUser = {
 const dashboardStatus = {
   credit_balance: "$842.40",
 };
+
+const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 const sidebar: Array<[string, string, SidebarIcon]> = [
   ["Research Studio", "/", Sparkles],
@@ -132,18 +134,37 @@ function TopBar({ user }: { user: DashboardUser }) {
             <BookOpen size={17} />
             Docs
           </Link>
-          <SignedIn>
-            <AccountControl fallbackName={user.name} />
-          </SignedIn>
-          <SignedOut>
-            <Link href="/signin" className="mori-button mori-button-sm inline-flex">
-              Sign in
-            </Link>
-          </SignedOut>
+          <AuthSlot fallbackName={user.name} />
         </div>
       </div>
     </header>
   );
+}
+
+function AuthSlot({ fallbackName }: { fallbackName: string }) {
+  if (!clerkEnabled) {
+    return (
+      <Link href="/signin" className="mori-button mori-button-sm inline-flex">
+        Sign in
+      </Link>
+    );
+  }
+
+  return <ClerkAuthSlot fallbackName={fallbackName} />;
+}
+
+function ClerkAuthSlot({ fallbackName }: { fallbackName: string }) {
+  const { isSignedIn } = useUser();
+
+  if (!isSignedIn) {
+    return (
+      <Link href="/signin" className="mori-button mori-button-sm inline-flex">
+        Sign in
+      </Link>
+    );
+  }
+
+  return <AccountControl fallbackName={fallbackName} />;
 }
 
 function AccountControl({ fallbackName }: { fallbackName: string }) {
