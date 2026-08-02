@@ -2,30 +2,25 @@
 
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import {
+  BadgeCheck,
   BarChart3,
   BookOpen,
-  Box,
-  BrainCircuit,
-  Bug,
   CircleDollarSign,
+  Clock3,
   CreditCard,
   DatabaseZap,
   FileSearch,
-  Gift,
   GitBranch,
-  GitPullRequest,
   KeyRound,
   Mail,
   Menu,
-  Network,
   PanelLeftClose,
   PanelLeftOpen,
+  PlayCircle,
+  PlugZap,
   ReceiptText,
   ShieldCheck,
-  ShoppingCart,
   Sparkles,
-  Target,
-  Trophy,
   Users,
   X,
 } from "lucide-react";
@@ -54,35 +49,22 @@ const dashboardStatus = {
 };
 
 const sidebar: Array<[string, string, SidebarIcon]> = [
-  ["Overview", "/", Box],
-  ["Projects", "/projects", Box],
-  ["Bounty Board", "/bounties", Target],
-  ["Issue Bounties", "/issue-bounties", Bug],
-  ["Leaderboard", "/leaderboard", Trophy],
-  ["Campaigns", "/campaigns", Target],
-  ["Pull Requests", "/pull-requests", GitPullRequest],
-  ["API Keys", "/api-keys", KeyRound],
-  ["AI Tools", "/ai-tools", BrainCircuit],
-  ["Playground", "/playground", Sparkles],
-  ["Automations", "/workflows", GitBranch],
-  ["Marketplace", "/marketplace", ShoppingCart],
-  ["Rewards", "/rewards", Trophy],
-  ["Usage", "/usage", BarChart3],
+  ["Research Studio", "/", Sparkles],
+  ["Command Center", "/overview", BarChart3],
+  ["Research Runs", "/runs", PlayCircle],
+  ["Workflow Canvas", "/workflows", GitBranch],
+  ["Evidence Ledger", "/evidence", FileSearch],
+  ["Fact Checks", "/facts", ShieldCheck],
+  ["Paid APIs", "/apis", KeyRound],
+  ["Providers", "/providers", PlugZap],
+  ["Approvals", "/approvals", BadgeCheck],
+  ["x402 Payments", "/payments", CircleDollarSign],
+  ["Reports", "/reports", ReceiptText],
+  ["Schedules", "/schedules", Clock3],
   ["Billing", "/billing", CreditCard],
   ["Tables", "/tables", DatabaseZap],
   ["Profile", "/profile", Users],
-  ["Credit Wallet", "/credits", CreditCard],
-  ["Referral", "/referral", Gift],
-  ["Offers", "/offers", Gift],
-  ["Sponsors", "/sponsors", Users],
-  ["Notifications", "/notifications", Mail],
-  ["Research Runs", "/runs", FileSearch],
-  ["Task Planner", "/planner", Network],
-  ["Paid APIs", "/apis", KeyRound],
-  ["Payments", "/payments", CircleDollarSign],
-  ["Fact Checks", "/facts", ShieldCheck],
-  ["Data Enrichment", "/enrichment", DatabaseZap],
-  ["Report Builder", "/reports", ReceiptText],
+  ["Docs", "/docs", BookOpen],
 ];
 
 export function DashboardShell({ children }: { children: ReactNode }) {
@@ -141,9 +123,9 @@ function TopBar({ user }: { user: DashboardUser }) {
             <CircleDollarSign size={14} className="text-[#67e8bd]" />
             {dashboardStatus.credit_balance} x402 credits
           </span>
-          <Link href="/notifications" className="hidden items-center gap-1.5 hover:text-white sm:inline-flex">
+          <Link href="/approvals" className="hidden items-center gap-1.5 hover:text-white sm:inline-flex">
             <Mail size={17} />
-            Notifications
+            Approvals
           </Link>
           <Link href="/docs" className="hidden items-center gap-1.5 hover:text-white md:inline-flex">
             <BookOpen size={17} />
@@ -222,24 +204,24 @@ function WorkspaceSettings({ open, onClose }: { open: boolean; onClose: () => vo
             <div>
               <p className="text-sm font-semibold">Research Workspace</p>
               <p className="mt-1 max-w-[180px] text-xs leading-4 text-[#9a9a9a]">
-                Local-only shell for designing the dashboard before backend integration.
+                Research control plane for planning, paid API orchestration, approvals, and cited report delivery.
               </p>
             </div>
             <div className="grid gap-2 text-sm text-[#d8d8d8]">
               <div className="flex items-center justify-between rounded border border-[#333] bg-[#181818] px-3 py-2">
                 <span>Environment</span>
-                <span className="font-mono text-xs text-[#67e8bd]">frontend mock</span>
+                <span className="font-mono text-xs text-[#67e8bd]">local demo</span>
               </div>
               <div className="flex items-center justify-between rounded border border-[#333] bg-[#181818] px-3 py-2">
                 <span>Backend</span>
-                <span className="font-mono text-xs text-[#aaa]">not connected</span>
+                <span className="font-mono text-xs text-[#aaa]">FastAPI contract</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold">Authentication</p>
-            <p className="text-sm font-medium text-[#9a9a9a]">Disabled for local dashboard design.</p>
+            <p className="text-sm font-medium text-[#9a9a9a]">Clerk protected routes with API bearer tokens.</p>
           </div>
         </div>
       </section>

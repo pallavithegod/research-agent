@@ -887,6 +887,146 @@ export const pages: DashboardPage[] = [
     ],
   },
   {
+    slug: "evidence",
+    title: "Evidence Ledger",
+    eyebrow: "Sources",
+    description: "Review source cards, snippets, timestamps, confidence scores, and x402 receipts attached to each research claim.",
+    primaryAction: "Add evidence",
+    secondaryAction: "Audit sources",
+    metrics: [
+      { label: "Evidence items", value: "2,300", copy: "Search results, snippets, provider payloads, and receipts." },
+      { label: "Accepted sources", value: "940", copy: "Approved for citation in reports." },
+      { label: "Needs review", value: "17", copy: "Conflicts, stale sources, or low-confidence claims." },
+    ],
+    panels: [
+      {
+        title: "Evidence queue",
+        rows: [
+          { label: "Battery recycling capacity source", value: "Accepted", meta: "fresh source with timestamp" },
+          { label: "Laptop warranty comparison", value: "Review", meta: "provider data conflicts" },
+          { label: "Competitor pricing snapshot", value: "Accepted", meta: "receipt attached" },
+        ],
+      },
+      {
+        title: "Ledger fields",
+        rows: [
+          { label: "Citation snippet", value: "Required", meta: "source-backed claim text" },
+          { label: "Provider receipt", value: "Required", meta: "for paid calls" },
+          { label: "Confidence score", value: "Required", meta: "shown to report editor" },
+        ],
+      },
+    ],
+    activity: [
+      { title: "Evidence accepted", detail: "Three source cards were approved for the product comparison report.", time: "Today, 4:25 PM" },
+      { title: "Conflict flagged", detail: "Market sizing sources disagreed and were routed to fact-checking.", time: "Today, 3:52 PM" },
+    ],
+  },
+  {
+    slug: "providers",
+    title: "Provider Registry",
+    eyebrow: "Composability",
+    description: "Manage x402-enabled providers for search, summarization, fact-checking, enrichment, and report generation.",
+    primaryAction: "Connect provider",
+    secondaryAction: "Run handshake",
+    metrics: [
+      { label: "Connected providers", value: "8", copy: "Available to the planner and workflow canvas." },
+      { label: "Provider classes", value: "5", copy: "Search, retrieval, facts, enrichment, reports." },
+      { label: "Fallback chains", value: "5", copy: "Used when latency, budget, or policy blocks a call." },
+    ],
+    panels: [
+      {
+        title: "Provider catalog",
+        rows: [
+          { label: "Paid Search API", value: "$0.08/query", meta: "web, news, scholar" },
+          { label: "Claim Verification API", value: "$0.42/claim", meta: "independent validation" },
+          { label: "Entity Enrichment API", value: "$0.15/entity", meta: "structured data" },
+        ],
+      },
+      {
+        title: "Readiness checks",
+        rows: [
+          { label: "x402 terms", value: "Passing", meta: "amount, asset, expiry, resource" },
+          { label: "Receipt verification", value: "Passing", meta: "settlement proof" },
+          { label: "Policy allow-list", value: "Required", meta: "before paid use" },
+        ],
+      },
+    ],
+    activity: [
+      { title: "Provider connected", detail: "Entity enrichment provider was made available to planner runs.", time: "Today, 2:43 PM" },
+      { title: "Handshake tested", detail: "Paid Search API returned valid x402 payment terms.", time: "Today, 1:07 PM" },
+    ],
+  },
+  {
+    slug: "approvals",
+    title: "Approvals",
+    eyebrow: "Human control",
+    description: "Approve new providers, budget increases, scheduled run scopes, and sensitive workflow changes before execution.",
+    primaryAction: "Approve selected",
+    secondaryAction: "Edit policy",
+    metrics: [
+      { label: "Pending approvals", value: "6", copy: "Provider, budget, and schedule requests." },
+      { label: "Auto-approved", value: "31", copy: "Inside previously scoped allowances." },
+      { label: "Blocked requests", value: "4", copy: "Outside policy or missing evidence." },
+    ],
+    panels: [
+      {
+        title: "Approval queue",
+        rows: [
+          { label: "New enrichment provider", value: "$0.15", meta: "first-time provider" },
+          { label: "Market watch weekly cap", value: "$18", meta: "budget increase" },
+          { label: "Daily briefing schedule", value: "Weekdays", meta: "recurring run" },
+        ],
+      },
+      {
+        title: "Control policies",
+        rows: [
+          { label: "New provider", value: "Ask", meta: "explicit approval required" },
+          { label: "Budget increase", value: "Ask", meta: "no silent overspend" },
+          { label: "Product checkout", value: "Blocked", meta: "research handoff only" },
+        ],
+      },
+    ],
+    activity: [
+      { title: "Approval requested", detail: "A new paid provider needs permission before settlement.", time: "Today, 2:02 PM" },
+      { title: "Budget approved", detail: "Daily briefing retained its $2 weekday allowance.", time: "Today, 8:15 AM" },
+    ],
+  },
+  {
+    slug: "schedules",
+    title: "Schedules",
+    eyebrow: "Recurring research",
+    description: "Configure recurring briefings, market monitors, product watches, and policy trackers with scoped budgets.",
+    primaryAction: "Create schedule",
+    secondaryAction: "Calendar view",
+    metrics: [
+      { label: "Active schedules", value: "5", copy: "Recurring research workflows." },
+      { label: "Weekly budget", value: "$42", copy: "Across all scheduled runs." },
+      { label: "Next run", value: "8 AM", copy: "Daily competitor briefing." },
+    ],
+    panels: [
+      {
+        title: "Scheduled runs",
+        rows: [
+          { label: "Daily competitor briefing", value: "$2/day", meta: "weekdays at 8 AM" },
+          { label: "Laptop price monitor", value: "$1/day", meta: "notify when threshold changes" },
+          { label: "Battery policy tracker", value: "$9/week", meta: "government and news sources" },
+        ],
+      },
+      {
+        title: "Schedule safeguards",
+        rows: [
+          { label: "Scoped budget", value: "Required", meta: "per run or per period" },
+          { label: "Report delivery", value: "Enabled", meta: "with citations" },
+          { label: "Payment prompts", value: "Immediate", meta: "outside allowance" },
+        ],
+      },
+    ],
+    activity: [
+      { title: "Schedule created", detail: "Policy tracker will run every Monday with a $9 cap.", time: "Yesterday, 5:15 PM" },
+      { title: "Briefing delivered", detail: "Competitor pricing digest was sent to the workspace.", time: "Today, 8:02 AM" },
+    ],
+  },
+  {
     slug: "docs",
     title: "Docs",
     eyebrow: "Reference",
