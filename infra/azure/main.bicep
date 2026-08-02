@@ -33,6 +33,13 @@ param upstashRedisRestUrl string
 @description('Upstash Redis REST token.')
 param upstashRedisRestToken string
 
+@secure()
+@description('Azure Blob Storage connection string for artifact storage.')
+param azureBlobConnectionString string = ''
+
+@description('Azure Blob container for artifact storage.')
+param azureBlobContainer string = 'research-agent-artifacts'
+
 @description('Clerk production issuer/domain.')
 param clerkIssuer string
 
@@ -100,6 +107,10 @@ var commonSecrets = [
   {
     name: 'upstash-redis-rest-token'
     value: upstashRedisRestToken
+  }
+  {
+    name: 'azure-blob-connection-string'
+    value: azureBlobConnectionString
   }
 ]
 
@@ -187,7 +198,19 @@ var commonEnv = [
   }
   {
     name: 'OBJECT_STORAGE_BUCKET'
-    value: ''
+    value: azureBlobContainer
+  }
+  {
+    name: 'ARTIFACT_STORAGE_BACKEND'
+    value: empty(azureBlobConnectionString) ? 'none' : 'azure_blob'
+  }
+  {
+    name: 'AZURE_BLOB_CONNECTION_STRING'
+    secretRef: 'azure-blob-connection-string'
+  }
+  {
+    name: 'AZURE_BLOB_CONTAINER'
+    value: azureBlobContainer
   }
   {
     name: 'SUPPORTED_PAYMENT_ASSETS'

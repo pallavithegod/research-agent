@@ -130,6 +130,7 @@ infra/azure/main.parameters.local.json
 real container registry passwords
 real Supabase URLs
 real Upstash tokens
+real Azure Storage connection strings
 real Clerk secrets
 real HMAC secrets
 ```

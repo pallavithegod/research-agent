@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     storage_backend: str = "postgres"
     auto_create_database_schema: bool = False
     object_storage_bucket: str = ""
+    artifact_storage_backend: str = "none"
+    azure_blob_connection_string: str = ""
+    azure_blob_container: str = ""
 
     job_queue_backend: str = "sync"
     research_job_queue_name: str = "research:jobs"
@@ -79,6 +82,12 @@ class Settings(BaseSettings):
             errors.append("AUTO_CREATE_DATABASE_SCHEMA must be false in production; run Alembic migrations instead.")
         if self.storage_backend != "postgres":
             errors.append("STORAGE_BACKEND must be postgres in production.")
+        if self.artifact_storage_backend not in {"none", "azure_blob"}:
+            errors.append("ARTIFACT_STORAGE_BACKEND must be none or azure_blob.")
+        if self.artifact_storage_backend == "azure_blob" and (
+            not self.azure_blob_connection_string or not self.azure_blob_container
+        ):
+            errors.append("AZURE_BLOB_CONNECTION_STRING and AZURE_BLOB_CONTAINER are required when ARTIFACT_STORAGE_BACKEND=azure_blob.")
         if self.job_queue_backend not in {"sync", "upstash"}:
             errors.append("JOB_QUEUE_BACKEND must be sync or upstash.")
         if self.job_queue_backend == "upstash" and (

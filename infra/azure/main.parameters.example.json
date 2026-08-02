@@ -29,6 +29,12 @@
     "upstashRedisRestToken": {
       "value": "DO_NOT_COMMIT_REAL_VALUE"
     },
+    "azureBlobConnectionString": {
+      "value": "DO_NOT_COMMIT_REAL_VALUE"
+    },
+    "azureBlobContainer": {
+      "value": "research-agent-artifacts"
+    },
     "clerkIssuer": {
       "value": "https://your-production-clerk-domain"
     },
