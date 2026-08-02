@@ -1,17 +1,16 @@
 "use client";
 
-import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { CheckCircle2, ShieldCheck, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuthenticatedApi } from "@/lib/api-client";
 
 type ApiState =
   | { status: "idle" | "loading" }
-  | { status: "ready"; userId: string; orgId: string; isMock: boolean }
+  | { status: "ready"; isMock: boolean }
   | { status: "error"; message: string };
 
 export function ClerkApiStatus() {
-  const { user } = useUser();
   const apiFetch = useAuthenticatedApi();
   const [state, setState] = useState<ApiState>({ status: "idle" });
 
@@ -23,14 +22,10 @@ export function ClerkApiStatus() {
       try {
         const response = await apiFetch("/v1/auth/me");
         if (!response.ok) throw new Error(`API returned ${response.status}`);
-        const payload = (await response.json()) as {
-          user: { id: string; org_id: string; is_mock: boolean };
-        };
+        const payload = (await response.json()) as { user: { is_mock: boolean } };
         if (active) {
           setState({
             status: "ready",
-            userId: payload.user.id,
-            orgId: payload.user.org_id,
             isMock: payload.user.is_mock,
           });
         }
@@ -60,9 +55,7 @@ export function ClerkApiStatus() {
             </span>
             <div>
               <h2 className="text-sm font-semibold text-white">Clerk session active</h2>
-              <p className="mt-1 text-sm leading-5 text-[#aaa]">
-                Signed in as {user?.primaryEmailAddress?.emailAddress ?? user?.username ?? "authenticated user"}.
-              </p>
+              <p className="mt-1 text-sm leading-5 text-[#aaa]">Signed in with a protected session.</p>
             </div>
           </div>
           <ApiBadge state={state} />
@@ -93,7 +86,7 @@ function ApiBadge({ state }: { state: ApiState }) {
       return (
         <span className="inline-flex items-center gap-2 rounded border border-[#67e8bd]/40 bg-[#183029] px-3 py-1 text-xs font-semibold text-[#9ff6d3]">
           <CheckCircle2 size={14} />
-          API verified: {state.isMock ? "local auth" : state.orgId}
+          API connected{state.isMock ? " locally" : ""}
         </span>
       );
   }

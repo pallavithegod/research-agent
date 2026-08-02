@@ -3,7 +3,6 @@
 import { ArrowRight, CheckCircle2, CircleDollarSign, Copy, FileText, KeyRound, Network, Search, ShieldCheck, Terminal } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { ClerkApiStatus } from "@/components/clerk-api-status";
 import { SoftDashboardEnhancements } from "@/components/soft-dashboard-sections";
 import { useAuthenticatedApi } from "@/lib/api-client";
 
@@ -195,7 +194,7 @@ export function DashboardOverview() {
       setCurrentJob(createdJob);
       setRunEvents([{ type: "planned", message: "Research plan created." }]);
       setCreateStatus("created");
-      setCreateMessage(`Created job ${createdJob.id}. Starting run...`);
+      setCreateMessage("Research run created. Starting workflow...");
 
       const runResponse = await apiFetch(`/v1/jobs/${createdJob.id}/run`, {
         method: "POST",
@@ -228,7 +227,7 @@ export function DashboardOverview() {
         setReport(detail.report ?? null);
       }
 
-      setCreateMessage(`Run completed for job ${createdJob.id}.`);
+      setCreateMessage("Run completed successfully.");
       await loadDashboardData();
     } catch (error) {
       setCreateStatus("error");
@@ -308,8 +307,6 @@ export function DashboardOverview() {
           </div>
         </section>
 
-        <ClerkApiStatus />
-
         <section className="mt-6 rounded border border-[#333] bg-[#242424] p-5">
           <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
             <div>
@@ -370,10 +367,7 @@ export function DashboardOverview() {
               <h2 className="text-base font-semibold">Run status</h2>
               {currentJob ? (
                 <div className="mt-5 rounded border border-[#333] bg-[#202020] p-4 text-sm">
-                  <Row label="Job ID" value={currentJob.id} />
-                  <div className="mt-2">
-                    <Row label="Status" value={currentJob.status} />
-                  </div>
+                  <Row label="Status" value={currentJob.status} />
                   <p className="mt-4 text-xs leading-5 text-[#aaa]">{currentJob.query}</p>
                 </div>
               ) : null}
