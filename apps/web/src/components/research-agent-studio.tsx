@@ -3,23 +3,18 @@
 import {
   BadgeCheck,
   BookOpenCheck,
-  BrainCircuit,
   CheckCircle2,
   ChevronRight,
   CircleDollarSign,
   Clock3,
-  DatabaseZap,
   FileSearch,
   FileText,
   Gauge,
   Globe2,
   KeyRound,
   Loader2,
-  LockKeyhole,
   Network,
-  Search,
   Send,
-  ShieldCheck,
   Sparkles,
   WalletCards,
 } from "lucide-react";
@@ -53,47 +48,17 @@ type RunEvent = {
   message: string;
 };
 
-const thinkingSteps = [
-  {
-    icon: BrainCircuit,
-    label: "Planning",
-    title: "Break the request into research work",
-    detail: "Identify comparison dimensions, freshness needs, source classes, and claims that need independent verification.",
-    state: "complete",
-  },
-  {
-    icon: Search,
-    label: "Search",
-    title: "Query paid search and retrieval APIs",
-    detail: "Route to web, product, academic, or news providers based on the task plan and spend policy.",
-    state: "active",
-  },
-  {
-    icon: DatabaseZap,
-    label: "Enrich",
-    title: "Normalize structured evidence",
-    detail: "Extract entities, prices, timestamps, specifications, source snippets, and provider receipts.",
-    state: "queued",
-  },
-  {
-    icon: ShieldCheck,
-    label: "Verify",
-    title: "Fact-check important claims",
-    detail: "Compare claims against independent sources, flag conflicts, and keep uncertainty visible in the report.",
-    state: "queued",
-  },
-  {
-    icon: FileText,
-    label: "Report",
-    title: "Compile a cited answer",
-    detail: "Generate a concise report with source-backed claims, limitations, and x402 payment evidence.",
-    state: "queued",
-  },
+const automationSteps = [
+  ["Plan", "Split the research request into paid and unpaid tasks.", "complete"],
+  ["Search", "Call search and retrieval providers with x402 terms.", "active"],
+  ["Enrich", "Normalize entities, prices, dates, and snippets.", "queued"],
+  ["Verify", "Check important claims against independent evidence.", "queued"],
+  ["Write", "Compile a cited answer with receipts and limitations.", "queued"],
 ] as const;
 
 const demoSources = [
   {
-    title: "Provider search result",
+    title: "Paid search result",
     domain: "paid-search.api",
     tag: "web + news",
     score: "94",
@@ -113,13 +78,6 @@ const demoSources = [
     score: "91",
     detail: "Independent support found for a key claim, with one competing source marked for review.",
   },
-] as const;
-
-const evidenceItems = [
-  ["Source diversity", "5 provider classes", "Search, retrieval, enrichment, fact-checking, report generation."],
-  ["Payment trail", "x402 receipts", "Every paid call keeps amount, provider, resource, and settlement status."],
-  ["Safety policy", "Approvals first", "New providers and budget changes require explicit user approval."],
-  ["Report quality", "Citations required", "Unsupported claims stay out of the final answer."],
 ] as const;
 
 const promptChips = [
@@ -288,163 +246,169 @@ export function ResearchAgentStudio() {
   const visibleEvents = events.length > 0 ? events : [{ type: "ready", message: "Ask a question to watch the planner, paid API calls, verification, and report generation unfold." }];
 
   return (
-    <div className="min-h-[calc(100vh-48px)] bg-[#181818] px-4 py-5 text-white sm:px-6 lg:px-8">
-      <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="overflow-hidden rounded border border-[#333] bg-[#202020]">
-          <div className="border-b border-[#303030] bg-[radial-gradient(circle_at_14%_0%,rgba(103,232,189,0.18),transparent_30rem),linear-gradient(180deg,#242424,#202020)] p-5 sm:p-6">
-            <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-start">
-              <div className="max-w-4xl">
-                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#67e8bd]">
-                  <Sparkles size={15} />
-                  Research Studio
-                </p>
-                <h1 className="mt-4 max-w-4xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                  Ask once. Watch the agent plan, pay, verify, and cite.
-                </h1>
-                <p className="mt-4 max-w-3xl text-sm leading-6 text-[#b9b9b9]">
-                  A demo-first interface for the multi-step research agent: Perplexity-style query intake, visible orchestration reasoning, paid service calls, evidence cards, and a final cited report.
-                </p>
-              </div>
-              <div className="grid min-w-[240px] gap-2 rounded border border-[#343434] bg-[#181818]/80 p-3 text-sm">
-                <StatusLine icon={<LockKeyhole size={15} />} label="Auth" value="Clerk JWT" />
-                <StatusLine icon={<CircleDollarSign size={15} />} label="Payments" value="x402 scoped" />
-                <StatusLine icon={<ShieldCheck size={15} />} label="Policy" value="No silent spend" />
-              </div>
+    <div className="min-h-[calc(100vh-48px)] bg-[#181818] px-4 py-6 text-white sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1240px]">
+        <header className="mx-auto max-w-[880px] pt-8 text-center">
+          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#67e8bd]">
+            <Sparkles size={15} />
+            Research Studio
+          </p>
+          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+            Research that shows its work.
+          </h1>
+          <p className="mx-auto mt-4 max-w-[680px] text-sm leading-6 text-[#aaa]">
+            Ask a question, let the agent plan paid API calls, settle x402 payments, verify evidence, and return a cited report.
+          </p>
+        </header>
+
+        <section className="mx-auto mt-7 max-w-[920px] border-y border-[#303030] py-4">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#67e8bd]">Sponsored payment rail</p>
+              <h2 className="mt-1 text-xl font-semibold">x402 powers autonomous paid research calls</h2>
             </div>
-
-            <form onSubmit={submitResearchRun} className="mt-7 rounded-md border border-[#3a3a3a] bg-[#181818] p-3 shadow-2xl">
-              <textarea
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                rows={4}
-                className="min-h-28 w-full resize-none bg-transparent px-1 py-1 text-base leading-7 text-white outline-none placeholder:text-[#777]"
-                placeholder="Ask the research agent anything that needs search, verification, enrichment, and citations..."
-              />
-              <div className="flex flex-col gap-3 border-t border-[#303030] pt-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-wrap gap-2">
-                  {["Market research", "Product research", "Policy watch"].map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => setMode(item)}
-                      className={`h-8 rounded border px-3 text-xs font-semibold transition ${mode === item ? "border-[#67e8bd]/60 bg-[#183029] text-[#9ff6d3]" : "border-[#343434] text-[#aaa] hover:bg-[#242424] hover:text-white"}`}
-                    >
-                      {item}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <label className="flex h-10 items-center gap-2 rounded border border-[#343434] bg-[#202020] px-3">
-                    <WalletCards size={16} className="text-[#67e8bd]" />
-                    <span className="text-xs text-[#888]">Max</span>
-                    <input
-                      value={maxSpend}
-                      onChange={(event) => setMaxSpend(event.target.value)}
-                      inputMode="decimal"
-                      className="w-16 bg-transparent font-mono text-sm text-white outline-none"
-                      aria-label="Maximum spend"
-                    />
-                    <span className="text-xs text-[#888]">USDC</span>
-                  </label>
-                  <button type="submit" disabled={isBusy} className="mori-button mori-button-sm inline-flex h-10 items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60">
-                    {isBusy ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                    {isBusy ? "Researching" : "New research run"}
-                  </button>
-                </div>
-              </div>
-            </form>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {promptChips.map((prompt) => (
-                <button key={prompt} onClick={() => setQuery(prompt)} className="rounded border border-[#343434] bg-[#202020]/80 px-3 py-1.5 text-xs text-[#aaa] hover:border-[#4a4a4a] hover:text-white">
-                  {prompt}
-                </button>
-              ))}
-            </div>
-
-            {message ? (
-              <p className={`mt-4 rounded border px-3 py-2 text-sm ${status === "error" ? "border-[#5d3939] bg-[#2a1f1f] text-[#ffb6b6]" : "border-[#67e8bd]/35 bg-[#183029] text-[#9ff6d3]"}`}>
-                {message}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="grid gap-0 xl:grid-cols-[0.47fr_0.53fr]">
-            <div className="border-b border-[#303030] p-5 xl:border-b-0 xl:border-r">
-              <SectionHeader icon={<BrainCircuit size={18} />} title="Visible Research Thinking" action="Live plan" />
-              <div className="mt-5 grid gap-3">
-                {thinkingSteps.map((step, index) => (
-                  <ThinkingStep key={step.label} index={index + 1} {...step} />
-                ))}
-              </div>
-              <div className="mt-5 rounded border border-[#333] bg-[#181818] p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-sm font-semibold">Run events</h3>
-                  <span className="rounded border border-[#343434] px-2 py-1 font-mono text-[11px] text-[#aaa]">{job ? "backend" : "demo"}</span>
-                </div>
-                <div className="mt-4 grid gap-3">
-                  {visibleEvents.map((event, index) => (
-                    <div key={`${event.type}-${index}`} className="grid grid-cols-[22px_1fr] gap-3 text-sm">
-                      <span className="mt-0.5 grid size-5 place-items-center rounded-full bg-[#26352f] text-[#67e8bd]">
-                        <CheckCircle2 size={13} />
-                      </span>
-                      <span>
-                        <span className="block font-medium capitalize text-white">{formatEventName(event.type)}</span>
-                        <span className="block text-xs leading-5 text-[#aaa]">{event.message}</span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="p-5">
-              <SectionHeader icon={<Globe2 size={18} />} title="Search Results and Evidence" action="Ranked" />
-              <div className="mt-5 grid gap-3">
-                {demoSources.map((source) => (
-                  <SourceResult key={source.title} {...source} />
-                ))}
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                {evidenceItems.map(([title, value, detail]) => (
-                  <div key={title} className="rounded border border-[#333] bg-[#181818] p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8f8f8f]">{title}</p>
-                    <p className="mt-3 text-lg font-semibold text-white">{value}</p>
-                    <p className="mt-2 text-xs leading-5 text-[#aaa]">{detail}</p>
-                  </div>
-                ))}
-              </div>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-[#aaa]">
+              <span className="inline-flex items-center gap-2 rounded border border-[#343434] px-3 py-2">
+                <CircleDollarSign size={15} className="text-[#67e8bd]" />
+                Scoped spend
+              </span>
+              <span className="inline-flex items-center gap-2 rounded border border-[#343434] px-3 py-2">
+                <BadgeCheck size={15} className="text-[#67e8bd]" />
+                Receipts
+              </span>
+              <a href="/payments" className="mori-button mori-button-sm inline-flex items-center gap-2">
+                x402 ledger
+                <ChevronRight size={14} />
+              </a>
             </div>
           </div>
         </section>
 
-        <aside className="grid gap-5 content-start">
-          <ReportPreview report={report} status={status} />
-          <PaymentPanel maxSpend={maxSpend} />
-          <ArchitecturePanel />
-        </aside>
+        <form onSubmit={submitResearchRun} className="mx-auto mt-7 max-w-[920px] rounded-md border border-[#3a3a3a] bg-[#202020] shadow-2xl">
+          <div className="px-4 pt-4">
+            <textarea
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              rows={4}
+              className="min-h-32 w-full resize-none bg-transparent text-base leading-7 text-white outline-none placeholder:text-[#777]"
+              placeholder="Ask anything that needs search, verification, enrichment, payments, and citations..."
+            />
+          </div>
+
+          <AutomationWindow events={visibleEvents} job={job} />
+
+          <div className="flex flex-col gap-3 border-t border-[#303030] px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {["Market research", "Product research", "Policy watch"].map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setMode(item)}
+                  className={`h-8 rounded px-3 text-xs font-semibold transition ${mode === item ? "bg-[#67e8bd] text-[#101010]" : "text-[#aaa] hover:bg-[#2b2b2b] hover:text-white"}`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <label className="flex h-10 items-center gap-2 rounded border border-[#343434] bg-[#181818] px-3">
+                <WalletCards size={16} className="text-[#67e8bd]" />
+                <span className="text-xs text-[#888]">Max</span>
+                <input
+                  value={maxSpend}
+                  onChange={(event) => setMaxSpend(event.target.value)}
+                  inputMode="decimal"
+                  className="w-16 bg-transparent font-mono text-sm text-white outline-none"
+                  aria-label="Maximum spend"
+                />
+                <span className="text-xs text-[#888]">USDC</span>
+              </label>
+              <button type="submit" disabled={isBusy} className="mori-button mori-button-sm inline-flex h-10 items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60">
+                {isBusy ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                {isBusy ? "Researching" : "New research run"}
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div className="mx-auto mt-4 flex max-w-[920px] flex-wrap justify-center gap-2">
+          {promptChips.map((prompt) => (
+            <button key={prompt} onClick={() => setQuery(prompt)} className="rounded px-3 py-1.5 text-xs text-[#aaa] hover:bg-[#242424] hover:text-white">
+              {prompt}
+            </button>
+          ))}
+        </div>
+
+        {message ? (
+          <p className={`mx-auto mt-4 max-w-[920px] rounded border px-3 py-2 text-sm ${status === "error" ? "border-[#5d3939] bg-[#2a1f1f] text-[#ffb6b6]" : "border-[#67e8bd]/35 bg-[#183029] text-[#9ff6d3]"}`}>
+            {message}
+          </p>
+        ) : null}
+
+        <main className="mt-10 grid gap-8 xl:grid-cols-[minmax(0,1fr)_380px]">
+          <section className="min-w-0">
+            <SectionHeader icon={<Globe2 size={18} />} title="Search results" action="Ranked evidence" />
+            <div className="mt-3 divide-y divide-[#303030] border-y border-[#303030]">
+              {demoSources.map((source) => (
+                <SourceResult key={source.title} {...source} />
+              ))}
+            </div>
+
+            <section className="mt-10">
+              <SectionHeader icon={<BookOpenCheck size={18} />} title="Answer draft" action={status === "complete" ? "Updated" : "Preview"} />
+              <ReportPreview report={report} />
+            </section>
+          </section>
+
+          <aside className="grid content-start gap-6">
+            <PaymentPanel maxSpend={maxSpend} />
+            <ProductSurfacePanel />
+          </aside>
+        </main>
       </div>
     </div>
   );
 }
 
-function ThinkingStep({ icon: Icon, label, title, detail, state, index }: (typeof thinkingSteps)[number] & { index: number }) {
-  const tone = state === "complete" ? "border-[#67e8bd]/45 bg-[#183029] text-[#9ff6d3]" : state === "active" ? "border-[#dfdcff]/35 bg-[#272638] text-[#dfdcff]" : "border-[#343434] bg-[#181818] text-[#aaa]";
-
+function AutomationWindow({ events, job }: { events: RunEvent[]; job: JobRecord | null }) {
   return (
-    <div className={`rounded border p-4 ${tone}`}>
-      <div className="flex items-start gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded bg-[#202020] text-[#67e8bd]">
-          <Icon size={18} />
-        </span>
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-[11px] text-[#8f8f8f]">0{index}</span>
-            <span className="text-xs font-semibold uppercase tracking-[0.14em]">{label}</span>
+    <div className="mx-3 mb-3 border-t border-[#303030] bg-[#1b1b1b] px-3 py-3">
+      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8f8f8f]">Automation window</p>
+          <h2 className="mt-1 text-sm font-semibold text-white">Planner, paid API calls, verification, report writing</h2>
+        </div>
+        <span className="w-fit rounded border border-[#343434] px-2 py-1 font-mono text-[11px] text-[#aaa]">{job ? "backend stream" : "demo stream"}</span>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-[0.54fr_0.46fr]">
+        <div className="space-y-3">
+          {automationSteps.map(([label, detail, state], index) => (
+            <div key={label} className="grid grid-cols-[28px_1fr] gap-3">
+              <span className={`mt-0.5 grid size-6 place-items-center rounded-full text-[11px] font-semibold ${state === "complete" ? "bg-[#67e8bd] text-[#101010]" : state === "active" ? "border border-[#67e8bd] text-[#67e8bd]" : "border border-[#3a3a3a] text-[#8f8f8f]"}`}>
+                {index + 1}
+              </span>
+              <span>
+                <span className="block text-sm font-semibold text-white">{label}</span>
+                <span className="block text-xs leading-5 text-[#aaa]">{detail}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-[#303030] pt-3 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8f8f8f]">Meaningful events</p>
+          <div className="mt-3 grid gap-3">
+            {events.slice(0, 4).map((event, index) => (
+              <div key={`${event.type}-${index}`} className="grid grid-cols-[18px_1fr] gap-2 text-sm">
+                <CheckCircle2 size={14} className="mt-0.5 text-[#67e8bd]" />
+                <span>
+                  <span className="block font-medium capitalize text-white">{formatEventName(event.type)}</span>
+                  <span className="block text-xs leading-5 text-[#aaa]">{event.message}</span>
+                </span>
+              </div>
+            ))}
           </div>
-          <h3 className="mt-2 text-sm font-semibold text-white">{title}</h3>
-          <p className="mt-2 text-xs leading-5 text-[#aaa]">{detail}</p>
         </div>
       </div>
     </div>
@@ -453,63 +417,64 @@ function ThinkingStep({ icon: Icon, label, title, detail, state, index }: (typeo
 
 function SourceResult({ title, domain, tag, score, detail }: { title: string; domain: string; tag: string; score: string; detail: string }) {
   return (
-    <article className="rounded border border-[#333] bg-[#181818] p-4 transition hover:border-[#4a4a4a]">
+    <article className="py-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded bg-[#26352f] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9ff6d3]">{tag}</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[#67e8bd]">{tag}</span>
             <span className="font-mono text-xs text-[#8f8f8f]">{domain}</span>
           </div>
-          <h3 className="mt-3 text-sm font-semibold text-white">{title}</h3>
-          <p className="mt-2 text-xs leading-5 text-[#aaa]">{detail}</p>
+          <h3 className="mt-2 text-lg font-semibold text-white">{title}</h3>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#aaa]">{detail}</p>
         </div>
-        <span className="grid size-12 shrink-0 place-items-center rounded border border-[#343434] bg-[#202020] font-mono text-sm font-semibold text-[#67e8bd]">{score}</span>
+        <span className="shrink-0 font-mono text-sm font-semibold text-[#67e8bd]">{score}</span>
       </div>
     </article>
   );
 }
 
-function ReportPreview({ report, status }: { report: ReportRecord; status: string }) {
+function ReportPreview({ report }: { report: ReportRecord }) {
   return (
-    <section className="rounded border border-[#333] bg-[#202020] p-5">
-      <SectionHeader icon={<BookOpenCheck size={18} />} title="Cited Report" action={status === "complete" ? "Updated" : "Preview"} />
-      <div className="mt-5 rounded border border-[#333] bg-[#181818] p-4">
-        <p className="text-base font-semibold text-white">{report.title}</p>
-        <p className="mt-2 text-sm leading-6 text-[#aaa]">{report.summary}</p>
-        <pre className="mt-4 max-h-64 overflow-auto whitespace-pre-wrap rounded border border-[#303030] bg-[#111] p-3 font-mono text-xs leading-5 text-[#cfcfcf]">{report.markdown}</pre>
-        <div className="mt-4 grid gap-2">
-          {(report.citations ?? []).slice(0, 3).map((citation) => (
-            <div key={citation.id} className="flex items-start gap-2 rounded border border-[#303030] bg-[#202020] p-3 text-xs">
-              <BadgeCheck size={14} className="mt-0.5 shrink-0 text-[#67e8bd]" />
-              <span>
-                <span className="block text-white">{citation.claim}</span>
-                <span className="mt-1 block font-mono text-[#aaa]">confidence {Math.round(citation.confidence * 100)}%</span>
-              </span>
-            </div>
-          ))}
-        </div>
+    <div className="mt-4 border-y border-[#303030] py-5">
+      <p className="text-xl font-semibold text-white">{report.title}</p>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-[#aaa]">{report.summary}</p>
+      <pre className="mt-5 max-h-72 overflow-auto whitespace-pre-wrap border-l border-[#67e8bd] bg-[#151515] p-4 font-mono text-xs leading-5 text-[#cfcfcf]">{report.markdown}</pre>
+      <div className="mt-5 grid gap-3">
+        {(report.citations ?? []).slice(0, 3).map((citation) => (
+          <div key={citation.id} className="flex items-start gap-2 text-sm">
+            <BadgeCheck size={15} className="mt-0.5 shrink-0 text-[#67e8bd]" />
+            <span>
+              <span className="block text-white">{citation.claim}</span>
+              <span className="mt-1 block font-mono text-xs text-[#aaa]">confidence {Math.round(citation.confidence * 100)}%</span>
+            </span>
+          </div>
+        ))}
       </div>
-    </section>
+    </div>
   );
 }
 
 function PaymentPanel({ maxSpend }: { maxSpend: string }) {
   return (
-    <section className="rounded border border-[#333] bg-[#202020] p-5">
-      <SectionHeader icon={<CircleDollarSign size={18} />} title="x402 Payment Guard" action="Scoped" />
+    <section className="border-y border-[#303030] py-5">
+      <SectionHeader icon={<CircleDollarSign size={18} />} title="x402 payment guard" action="Sponsor rail" />
       <div className="mt-5 grid gap-3 text-sm">
         <StatusLine icon={<WalletCards size={15} />} label="Run budget" value={`$${maxSpend || "5.00"}`} />
         <StatusLine icon={<KeyRound size={15} />} label="New provider" value="Ask first" />
         <StatusLine icon={<Clock3 size={15} />} label="Settlement" value="Receipt stored" />
       </div>
-      <div className="mt-5 rounded border border-[#343434] bg-[#181818] p-3 text-xs leading-5 text-[#aaa]">
-        Payments are autonomous only inside an approved run scope. New APIs, higher budgets, or unrelated actions stay blocked until the user approves them.
-      </div>
+      <p className="mt-4 text-xs leading-5 text-[#aaa]">
+        x402 lets the orchestrator pay provider APIs inside an approved scope. New providers, budget increases, and unrelated actions remain blocked until approved.
+      </p>
+      <a href="/payments" className="mori-button mori-button-sm mt-5 inline-flex items-center gap-2">
+        Review x402 payments
+        <ChevronRight size={14} />
+      </a>
     </section>
   );
 }
 
-function ArchitecturePanel() {
+function ProductSurfacePanel() {
   const links = [
     ["Workflow canvas", "/workflows", Network],
     ["Paid APIs", "/apis", KeyRound],
@@ -518,11 +483,11 @@ function ArchitecturePanel() {
   ] as const;
 
   return (
-    <section className="rounded border border-[#333] bg-[#202020] p-5">
-      <SectionHeader icon={<Gauge size={18} />} title="Product Surfaces" action="Demo" />
-      <div className="mt-5 grid gap-2">
+    <section className="border-y border-[#303030] py-5">
+      <SectionHeader icon={<Gauge size={18} />} title="Product surfaces" action="Demo" />
+      <div className="mt-4 divide-y divide-[#303030]">
         {links.map(([label, href, Icon]) => (
-          <a key={label} href={href} className="flex items-center justify-between rounded border border-[#333] bg-[#181818] p-3 text-sm text-[#d8d8d8] hover:bg-[#242424]">
+          <a key={label} href={href} className="flex items-center justify-between py-3 text-sm text-[#d8d8d8] hover:text-white">
             <span className="flex items-center gap-2">
               <Icon size={15} className="text-[#67e8bd]" />
               {label}
@@ -531,6 +496,10 @@ function ArchitecturePanel() {
           </a>
         ))}
       </div>
+      <a href="/reports" className="mori-button mori-button-sm mt-5 inline-flex items-center gap-2">
+        Open reports
+        <ChevronRight size={14} />
+      </a>
     </section>
   );
 }
@@ -542,14 +511,14 @@ function SectionHeader({ icon, title, action }: { icon: ReactNode; title: string
         <span className="text-[#67e8bd]">{icon}</span>
         {title}
       </h2>
-      <span className="rounded border border-[#343434] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#aaa]">{action}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8f8f8f]">{action}</span>
     </div>
   );
 }
 
 function StatusLine({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded border border-[#333] bg-[#202020] px-3 py-2">
+    <div className="flex items-center justify-between gap-3 border-b border-[#303030] pb-2 last:border-0 last:pb-0">
       <span className="flex min-w-0 items-center gap-2 text-[#aaa]">
         <span className="text-[#67e8bd]">{icon}</span>
         <span className="truncate">{label}</span>
