@@ -1,0 +1,17 @@
+.git
+.gitignore
+node_modules
+npm-debug.log*
+apps/web/.next
+apps/web/node_modules
+apps/web/.env
+apps/web/.env.local
+apps/api/.env
+apps/api/.venv
+apps/api/__pycache__
+apps/api/**/__pycache__
+apps/api/**/*.pyc
+implementation_guide.md
+docker-compose.yml
+Dockerfile.dev
+apps/api/Dockerfile.dev
