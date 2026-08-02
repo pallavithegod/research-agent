@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     auto_create_database_schema: bool = False
     object_storage_bucket: str = ""
 
+    job_queue_backend: str = "sync"
+    research_job_queue_name: str = "research:jobs"
+    upstash_redis_rest_url: str = ""
+    upstash_redis_rest_token: str = ""
+
     hmac_secret: str = "replace-with-strong-local-secret"
     supported_payment_assets: str = "USDC"
     supported_payment_networks: str = "base-sepolia,base"
@@ -72,6 +77,12 @@ class Settings(BaseSettings):
             errors.append("AUTO_CREATE_DATABASE_SCHEMA must be false in production; run Alembic migrations instead.")
         if self.storage_backend != "postgres":
             errors.append("STORAGE_BACKEND must be postgres in production.")
+        if self.job_queue_backend not in {"sync", "upstash"}:
+            errors.append("JOB_QUEUE_BACKEND must be sync or upstash.")
+        if self.job_queue_backend == "upstash" and (
+            not self.upstash_redis_rest_url or not self.upstash_redis_rest_token
+        ):
+            errors.append("UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required when JOB_QUEUE_BACKEND=upstash.")
         if "localhost" in self.database_url or "@db:" in self.database_url:
             errors.append("DATABASE_URL must point to managed PostgreSQL in production, not local Docker.")
         if self.hmac_secret == "replace-with-strong-local-secret" or len(self.hmac_secret) < 32:
