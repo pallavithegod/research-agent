@@ -47,7 +47,7 @@ def process_once() -> bool:
         return False
 
     logger.info("queued_job_started", extra={"event": "queued_job_started", "job_id": job.id})
-    orchestrator_service.run_mock_research(job)
+    orchestrator_service.run_research(job)
     logger.info("queued_job_completed", extra={"event": "queued_job_completed", "job_id": job.id})
     return True
 

@@ -44,7 +44,18 @@ def get_job(job_id: str, auth: AuthContext = Depends(current_auth)) -> dict:
     job = get_job_for_org(job_id, auth)
     plan = store.plans.get(job.plan_id or "")
     report = store.reports.get(job.report_id or "")
-    return {"job": job, "plan": plan, "report": report}
+    provider_calls = [call for call in store.provider_calls.values() if call.job_id == job.id and call.org_id == auth.org_id]
+    receipt_ids = {call.receipt_id for call in provider_calls if call.receipt_id}
+    receipts = [receipt for receipt in store.receipts.values() if receipt.id in receipt_ids and receipt.org_id == auth.org_id]
+    evidence = [item for item in store.evidence.values() if item.job_id == job.id and item.org_id == auth.org_id]
+    return {
+        "job": job,
+        "plan": plan,
+        "report": report,
+        "evidence": evidence,
+        "provider_calls": provider_calls,
+        "payment_receipts": receipts,
+    }
 
 
 @router.post("/{job_id}/run")
@@ -85,10 +96,13 @@ async def job_events(job_id: str, auth: AuthContext = Depends(current_auth)) -> 
 def job_audit(job_id: str, auth: AuthContext = Depends(current_auth)) -> dict:
     job = get_job_for_org(job_id, auth)
     evidence = [item for item in store.evidence.values() if item.job_id == job.id and item.org_id == auth.org_id]
-    receipts = [receipt for receipt in store.receipts.values() if receipt.org_id == auth.org_id]
+    provider_calls = [call for call in store.provider_calls.values() if call.job_id == job.id and call.org_id == auth.org_id]
+    receipt_ids = {call.receipt_id for call in provider_calls if call.receipt_id}
+    receipts = [receipt for receipt in store.receipts.values() if receipt.id in receipt_ids and receipt.org_id == auth.org_id]
     return {
         "job": job,
         "events": store.events.get(job.id, []),
         "evidence": evidence,
+        "provider_calls": provider_calls,
         "payment_receipts": receipts,
     }
