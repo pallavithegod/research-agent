@@ -8,6 +8,7 @@ from app.core.errors import install_error_handlers
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    settings.validate_production()
     app = FastAPI(
         title=settings.app_name,
         version="0.1.0",
@@ -15,7 +16,7 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.frontend_origin, "http://localhost:3000", "http://127.0.0.1:3000"],
+        allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

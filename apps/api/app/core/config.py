@@ -1,6 +1,5 @@
 from functools import lru_cache
 
-from pydantic import AnyHttpUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -30,6 +29,17 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     @property
+    def is_production(self) -> bool:
+        return self.environment.lower() == "production"
+
+    @property
+    def cors_origins(self) -> list[str]:
+        origins = [self.frontend_origin]
+        if not self.is_production:
+            origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
+        return list(dict.fromkeys(origin for origin in origins if origin))
+
+    @property
     def allowed_assets(self) -> set[str]:
         return {item.strip().upper() for item in self.supported_payment_assets.split(",") if item.strip()}
 
@@ -44,6 +54,31 @@ class Settings(BaseSettings):
         if self.clerk_issuer:
             return f"{self.clerk_issuer.rstrip('/')}/.well-known/jwks.json"
         return ""
+
+    def validate_production(self) -> None:
+        if not self.is_production:
+            return
+
+        errors: list[str] = []
+        if not self.auth_required:
+            errors.append("AUTH_REQUIRED must be true in production.")
+        if not self.clerk_issuer:
+            errors.append("CLERK_ISSUER is required in production.")
+        if not self.resolved_jwks_url:
+            errors.append("CLERK_JWKS_URL or CLERK_ISSUER is required in production.")
+        if not self.frontend_origin.startswith("https://"):
+            errors.append("FRONTEND_ORIGIN must be an https URL in production.")
+        if self.auto_create_database_schema:
+            errors.append("AUTO_CREATE_DATABASE_SCHEMA must be false in production; run Alembic migrations instead.")
+        if self.storage_backend != "postgres":
+            errors.append("STORAGE_BACKEND must be postgres in production.")
+        if "localhost" in self.database_url or "@db:" in self.database_url:
+            errors.append("DATABASE_URL must point to managed PostgreSQL in production, not local Docker.")
+        if self.hmac_secret == "replace-with-strong-local-secret" or len(self.hmac_secret) < 32:
+            errors.append("HMAC_SECRET must be replaced with a strong production secret.")
+
+        if errors:
+            raise ValueError("Invalid production configuration: " + " ".join(errors))
 
 
 @lru_cache
