@@ -50,7 +50,7 @@ def get_job(job_id: str, auth: AuthContext = Depends(current_auth)) -> dict:
 @router.post("/{job_id}/run")
 def run_job(job_id: str, auth: AuthContext = Depends(current_auth)) -> dict:
     job = get_job_for_org(job_id, auth)
-    report = orchestrator_service.run_mock_research(job)
+    report = orchestrator_service.start_job(job)
     return {"job": store.jobs[job.id], "report": report}
 
 

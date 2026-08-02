@@ -22,6 +22,7 @@ class Settings(BaseSettings):
 
     job_queue_backend: str = "sync"
     research_job_queue_name: str = "research:jobs"
+    worker_poll_seconds: float = 2.0
     upstash_redis_rest_url: str = ""
     upstash_redis_rest_token: str = ""
 
@@ -84,6 +85,8 @@ class Settings(BaseSettings):
             not self.upstash_redis_rest_url or not self.upstash_redis_rest_token
         ):
             errors.append("UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required when JOB_QUEUE_BACKEND=upstash.")
+        if self.worker_poll_seconds <= 0:
+            errors.append("WORKER_POLL_SECONDS must be greater than 0.")
         if "localhost" in self.database_url or "@db:" in self.database_url:
             errors.append("DATABASE_URL must point to managed PostgreSQL in production, not local Docker.")
         if self.hmac_secret == "replace-with-strong-local-secret" or len(self.hmac_secret) < 32:

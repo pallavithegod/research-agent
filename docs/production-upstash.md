@@ -37,6 +37,7 @@ Production:
 ```env
 JOB_QUEUE_BACKEND=upstash
 RESEARCH_JOB_QUEUE_NAME=research:jobs
+WORKER_POLL_SECONDS=2
 UPSTASH_REDIS_REST_URL=replace-with-upstash-redis-rest-url
 UPSTASH_REDIS_REST_TOKEN=replace-with-upstash-redis-rest-token
 ```
@@ -49,11 +50,26 @@ JOB_QUEUE_BACKEND=sync
 
 ## Worker Plan
 
-The next backend phase should:
+The worker container can now poll queued jobs and run the current mock research executor.
+
+Build the worker image:
+
+```powershell
+docker build -f apps/api/Dockerfile.worker -t research-agent-worker:prod apps/api
+```
+
+Deploy it as a separate Azure Container App with:
 
 ```text
-create a separate worker container
-poll Upstash Redis for research jobs
+Ingress: disabled
+Command: python -m app.workers.research_worker
+Same Supabase, Clerk, HMAC, and Upstash env vars as the API
+JOB_QUEUE_BACKEND=upstash
+```
+
+The next backend phase should replace the mock executor with real durable orchestration:
+
+```text
 run the durable orchestration graph
 persist every state transition to PostgreSQL
 emit events for the dashboard SSE endpoint
@@ -68,6 +84,7 @@ Queue helpers live in:
 ```text
 apps/api/app/services/job_queue.py
 apps/api/app/workers/research_worker.py
+apps/api/Dockerfile.worker
 ```
 
-The current dashboard flow is not yet changed to use the queue.
+When `JOB_QUEUE_BACKEND=upstash`, `POST /v1/jobs/{job_id}/run` enqueues the job. When `JOB_QUEUE_BACKEND=sync`, it still runs synchronously for local development.

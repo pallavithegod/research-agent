@@ -2,11 +2,19 @@ from decimal import Decimal
 
 from app.domain.enums import EventType, JobStatus
 from app.domain.schemas import Citation, EvidenceItem, JobEvent, Report, ResearchJob
+from app.services.job_queue import job_queue_service
 from app.storage.memory import store
 
 
 class OrchestratorService:
     """Synchronous MVP executor. Replace with durable workers/queues before production."""
+
+    def start_job(self, job: ResearchJob) -> Report | None:
+        if job_queue_service.is_enabled:
+            self.queue_job(job)
+            job_queue_service.enqueue_research_job(job)
+            return None
+        return self.run_mock_research(job)
 
     def queue_job(self, job: ResearchJob) -> ResearchJob:
         job.status = JobStatus.QUEUED
@@ -58,4 +66,3 @@ class OrchestratorService:
 
 
 orchestrator_service = OrchestratorService()
-

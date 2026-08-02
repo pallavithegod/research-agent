@@ -98,6 +98,9 @@ SUPPORTED_PAYMENT_NETWORKS=base-sepolia,base
 MAX_PAYMENT_PIN_ATTEMPTS=5
 PAYMENT_PIN_LOCK_SECONDS=900
 LOG_LEVEL=INFO
+JOB_QUEUE_BACKEND=upstash
+RESEARCH_JOB_QUEUE_NAME=research:jobs
+WORKER_POLL_SECONDS=2
 ```
 
 Store these as Azure Container Apps secrets and reference them from environment variables:
@@ -110,6 +113,15 @@ UPSTASH_REDIS_REST_URL
 UPSTASH_REDIS_REST_TOKEN
 future provider API keys
 future x402/wallet/payment secrets
+```
+
+Deploy the research worker as a second Azure Container App:
+
+```text
+Image: API worker image
+Ingress: disabled
+Command: python -m app.workers.research_worker
+Secrets/env: same database, Upstash, Clerk, and HMAC settings
 ```
 
 Do not put these secrets in the Docker image.
