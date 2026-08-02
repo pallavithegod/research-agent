@@ -44,5 +44,6 @@ Thumbs.db
 *.local
 coverage/
 implementation_guide.md
+infra/azure/main.parameters.local.json
 
 /src/generated/prisma
