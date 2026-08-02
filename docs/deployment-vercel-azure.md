@@ -56,6 +56,12 @@ Push these images to your chosen registry, such as Azure Container Registry or G
 
 ## Azure Container Apps
 
+Install Azure CLI first:
+
+```text
+docs/azure-cli-setup.md
+```
+
 The Bicep template is:
 
 ```text
@@ -69,6 +75,18 @@ Copy-Item "infra\azure\main.parameters.example.json" "infra\azure\main.parameter
 ```
 
 Put real image names and secret values only in `main.parameters.local.json`.
+
+Preflight check:
+
+```powershell
+.\scripts\check_azure_deploy.ps1
+```
+
+With resource group validation:
+
+```powershell
+.\scripts\check_azure_deploy.ps1 -ResourceGroup YOUR_RESOURCE_GROUP
+```
 
 Deploy shape:
 

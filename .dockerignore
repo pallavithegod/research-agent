@@ -3,6 +3,7 @@
 node_modules
 npm-debug.log*
 apps/web/.next
+apps/web/.clerk
 apps/web/node_modules
 apps/web/.env
 apps/web/.env.local

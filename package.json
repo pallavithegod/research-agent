@@ -7,7 +7,10 @@
     "build:web": "npm --prefix apps/web run build",
     "start:web": "npm --prefix apps/web run start",
     "dev:api": "cd apps/api && uvicorn app.main:app --reload --port 8000",
-    "smoke:api": "python scripts/smoke_test.py --api-url http://localhost:8000"
+    "smoke:api": "python scripts/smoke_test.py --api-url http://localhost:8000",
+    "check:api": "cd apps/api && python -m compileall app migrations",
+    "check:scripts": "python -m py_compile scripts/smoke_test.py scripts/secret_scan.py",
+    "check:secrets": "python scripts/secret_scan.py"
   },
   "workspaces": [
     "apps/web"

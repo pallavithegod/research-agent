@@ -10,6 +10,7 @@ apps/api/.env
 node_modules/
 .next/
 .next-dev/
+apps/web/.clerk/
 out/
 dist/
 build/
