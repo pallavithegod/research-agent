@@ -45,7 +45,13 @@ class MemoryStore:
 settings = get_settings()
 if settings.storage_backend == "memory":
     store = MemoryStore()
-else:
+elif settings.storage_backend == "postgres":
     from app.storage.postgres import PostgresStore
 
     store = PostgresStore()
+elif settings.storage_backend == "mongodb":
+    from app.storage.mongodb import MongoStore
+
+    store = MongoStore()
+else:
+    raise RuntimeError(f"Unsupported STORAGE_BACKEND: {settings.storage_backend}")

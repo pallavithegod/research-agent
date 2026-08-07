@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -5,6 +7,16 @@ from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.errors import install_error_handlers
 from app.core.observability import configure_logging, install_observability
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    settings = get_settings()
+    if settings.storage_backend == "postgres" and settings.auto_create_database_schema:
+        from app.db.session import create_database_schema
+
+        create_database_schema()
+    yield
 
 
 def create_app() -> FastAPI:
@@ -15,6 +27,7 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         version="0.1.0",
         description="Backend API for the Multi-Step Research Agent with Clerk auth and x402-ready workflows.",
+        lifespan=lifespan,
     )
     install_observability(app, settings)
     app.add_middleware(
@@ -26,13 +39,6 @@ def create_app() -> FastAPI:
     )
     app.include_router(api_router, prefix=settings.api_prefix)
     install_error_handlers(app)
-
-    @app.on_event("startup")
-    def startup() -> None:
-        if settings.storage_backend == "postgres" and settings.auto_create_database_schema:
-            from app.db.session import create_database_schema
-
-            create_database_schema()
 
     return app
 

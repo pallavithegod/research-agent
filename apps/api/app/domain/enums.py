@@ -3,7 +3,9 @@ from enum import StrEnum
 
 class JobStatus(StrEnum):
     DRAFT = "draft"
+    AWAITING_INPUT = "awaiting_input"
     PLANNED = "planned"
+    CLARIFICATION_REQUIRED = "clarification_required"
     AWAITING_BUDGET = "awaiting_budget"
     AWAITING_APPROVAL = "awaiting_approval"
     QUEUED = "queued"
@@ -36,6 +38,7 @@ class StepType(StrEnum):
 
 class EventType(StrEnum):
     PLANNED = "planned"
+    CLARIFICATION_REQUIRED = "clarification_required"
     WAITING_FOR_APPROVAL = "waiting_for_approval"
     PAYMENT_REQUIRED = "payment_required"
     PAID = "paid"
@@ -47,6 +50,9 @@ class EventType(StrEnum):
     CANCELLED = "cancelled"
     BUDGET_EXHAUSTED = "budget_exhausted"
     SCHEDULE_PAUSED = "schedule_paused"
+    QUALITY_REVIEWED = "quality_reviewed"
+    FEEDBACK_RECEIVED = "feedback_received"
+    REPORT_REVISED = "report_revised"
 
 
 class ApprovalScope(StrEnum):

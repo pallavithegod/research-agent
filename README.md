@@ -16,7 +16,7 @@ The old `frontend` folder may still exist if a Windows process is locking `.next
 Frontend:
 
 ```powershell
-cd "D:\temp\grp proj 3\project-dashboard"
+cd "D:\multi-step-research\research-agent"
 npm install
 Copy-Item "apps\web\.env.example" "apps\web\.env.local"
 npm run dev:web
@@ -25,12 +25,10 @@ npm run dev:web
 Backend:
 
 ```powershell
-cd "D:\temp\grp proj 3\project-dashboard\apps\api"
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r requirements.txt
-Copy-Item ".env.example" ".env"
-uvicorn app.main:app --reload --port 8000
+cd "D:\multi-step-research\research-agent"
+npm run setup:api
+Copy-Item "apps\api\.env.example" "apps\api\.env"
+npm run dev:api
 ```
 
 URLs:
@@ -52,3 +50,11 @@ For local setup:
 3. Keep `apps/api/.env` with `AUTH_REQUIRED=false` for first local testing, or set Clerk issuer/JWKS values when you want strict backend token validation.
 
 Detailed local steps are in `implementation_guide.md`, which is intentionally gitignored.
+
+## Product direction
+
+The research workspace now supports Quick/Deep/Compare modes, enforceable source policies, evidence-quality scoring, suggested follow-ups, and feedback-driven immutable report revisions. See [the feature research](docs/product-feature-research.md) for the product thesis, integrated capabilities, and prioritized roadmap.
+
+## Production deployment
+
+Use the production runbook in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). It covers the complete Azure Container Apps stack: public web app, internal API, worker, ACR, managed image pulls, fixed outbound IP, MongoDB Atlas, production credentials, health checks, and the x402 rollout sequence.

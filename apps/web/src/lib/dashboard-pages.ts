@@ -229,7 +229,7 @@ export const pages: DashboardPage[] = [
     primaryAction: "Create key",
     secondaryAction: "Rotate selected",
     metrics: [
-      { label: "Active keys", value: "4", copy: "Mock keys for local dashboard design." },
+      { label: "Active keys", value: "4", copy: "Workspace integration credentials." },
       { label: "Scoped providers", value: "8", copy: "Search, enrichment, and report APIs." },
       { label: "Rotation due", value: "1", copy: "Key lifecycle placeholder." },
     ],
@@ -247,12 +247,12 @@ export const pages: DashboardPage[] = [
         rows: [
           { label: "Search", value: "Allowed", meta: "budget capped" },
           { label: "Payments", value: "Approval required", meta: "x402" },
-          { label: "Admin", value: "Disabled", meta: "frontend mock" },
+          { label: "Admin", value: "Disabled", meta: "restricted by policy" },
         ],
       },
     ],
     activity: [
-      { title: "Key rotated", detail: "Mock gateway key rotated in UI state.", time: "Today, 9:42 AM" },
+      { title: "Key rotated", detail: "Gateway credential rotation recorded.", time: "Today, 9:42 AM" },
       { title: "Scope updated", detail: "Fact-check API limited to verification steps.", time: "Yesterday, 7:11 PM" },
     ],
   },
@@ -405,7 +405,7 @@ export const pages: DashboardPage[] = [
     secondaryAction: "Export ledger",
     metrics: [
       { label: "Accepted outputs", value: "37", copy: "Reports and evidence bundles." },
-      { label: "Quality bonus", value: "$18", copy: "Mock reward pool." },
+      { label: "Quality bonus", value: "$18", copy: "Quality review allocation." },
       { label: "Rejected claims", value: "5", copy: "Prevented unsupported report content." },
     ],
     panels: [
@@ -474,7 +474,7 @@ export const pages: DashboardPage[] = [
     primaryAction: "Top up",
     secondaryAction: "View receipts",
     metrics: [
-      { label: "Available", value: "$842.40", copy: "Mock USDC balance." },
+      { label: "Available", value: "$842.40", copy: "Configured research allowance." },
       { label: "Scoped allowances", value: "5", copy: "Per workflow run." },
       { label: "Pending receipts", value: "3", copy: "Awaiting final verification." },
     ],
@@ -505,13 +505,13 @@ export const pages: DashboardPage[] = [
     slug: "referral",
     title: "Referral",
     eyebrow: "Growth",
-    description: "Mock referral dashboard for inviting researchers, teams, and provider partners.",
+    description: "Manage invitations for researchers, teams, and provider partners.",
     primaryAction: "Copy invite",
     secondaryAction: "View invites",
     metrics: [
       { label: "Invites sent", value: "18", copy: "Team and partner invitations." },
       { label: "Accepted", value: "7", copy: "Joined workspace or provider pool." },
-      { label: "Credits earned", value: "$35", copy: "Mock referral balance." },
+      { label: "Credits earned", value: "$35", copy: "Recorded workspace credits." },
     ],
     panels: [
       {
@@ -533,7 +533,7 @@ export const pages: DashboardPage[] = [
     ],
     activity: [
       { title: "Invite accepted", detail: "A reviewer joined the quality review pool.", time: "Today, 9:18 AM" },
-      { title: "Referral credited", detail: "Mock credit added for a provider partner signup.", time: "Yesterday, 3:05 PM" },
+      { title: "Referral credited", detail: "Workspace credit added for a provider partner signup.", time: "Yesterday, 3:05 PM" },
     ],
   },
   {
@@ -1050,7 +1050,7 @@ export const pages: DashboardPage[] = [
       {
         title: "Backend handoff notes",
         rows: [
-          { label: "Mock data", value: "Replaceable", meta: "component-level constants" },
+          { label: "Demo data", value: "Isolated", meta: "replace with connected services" },
           { label: "Routes", value: "Ready", meta: "standalone frontend" },
           { label: "Auth", value: "Disabled", meta: "add later" },
         ],
@@ -1058,7 +1058,7 @@ export const pages: DashboardPage[] = [
     ],
     activity: [
       { title: "Docs page added", detail: "Topbar Docs now opens a standalone dashboard page.", time: "Today, 5:35 PM" },
-      { title: "Contract noted", detail: "Backend integration can replace mock page data later.", time: "Today, 5:28 PM" },
+      { title: "Contract noted", detail: "Backend integration points documented for this page.", time: "Today, 5:28 PM" },
     ],
   },
 ];

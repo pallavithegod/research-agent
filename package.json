@@ -6,11 +6,17 @@
     "dev:web": "npm --prefix apps/web run dev",
     "build:web": "npm --prefix apps/web run build",
     "start:web": "npm --prefix apps/web run start",
-    "dev:api": "cd apps/api && uvicorn app.main:app --reload --port 8000",
+    "setup:api": "powershell -ExecutionPolicy Bypass -File scripts/setup_api.ps1",
+    "dev:api": "cd apps/api && .venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --port 8000",
     "smoke:api": "python scripts/smoke_test.py --api-url http://localhost:8000",
     "check:api": "cd apps/api && python -m compileall app migrations",
-    "check:scripts": "python -m py_compile scripts/smoke_test.py scripts/secret_scan.py",
-    "check:secrets": "python scripts/secret_scan.py"
+    "test:api": "cd apps/api && python -m pytest -q",
+    "check:scripts": "python -m py_compile scripts/smoke_test.py scripts/secret_scan.py scripts/check_mongodb.py",
+    "deploy:azure": "powershell -ExecutionPolicy Bypass -File scripts/deploy_azure.ps1",
+    "check:mongodb": "python scripts/check_mongodb.py",
+    "check:secrets": "python scripts/secret_scan.py",
+    "check:standalone": "node -e \"const fs=require('fs'); if(!fs.existsSync('apps/web/.next/standalone/apps/web/server.js')) throw new Error('Standalone Next.js server was not generated')\"",
+    "predeploy": "npm run build:web && npm run check:standalone && npm run check:api && npm run test:api && npm run check:scripts && npm run check:secrets"
   },
   "workspaces": [
     "apps/web"

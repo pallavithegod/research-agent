@@ -2,44 +2,28 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "environmentName": {
-      "value": "prod"
-    },
-    "apiImage": {
-      "value": "REGISTRY_OR_REPO/research-agent-api:TAG"
-    },
-    "workerImage": {
-      "value": "REGISTRY_OR_REPO/research-agent-worker:TAG"
-    },
-    "frontendOrigin": {
-      "value": "https://your-vercel-domain"
-    },
-    "databaseUrl": {
-      "value": "DO_NOT_COMMIT_REAL_VALUE"
-    },
-    "migrationsDatabaseUrl": {
-      "value": "DO_NOT_COMMIT_REAL_VALUE"
-    },
-    "hmacSecret": {
-      "value": "DO_NOT_COMMIT_REAL_VALUE"
-    },
-    "upstashRedisRestUrl": {
-      "value": "DO_NOT_COMMIT_REAL_VALUE"
-    },
-    "upstashRedisRestToken": {
-      "value": "DO_NOT_COMMIT_REAL_VALUE"
-    },
-    "azureBlobConnectionString": {
-      "value": "DO_NOT_COMMIT_REAL_VALUE"
-    },
-    "azureBlobContainer": {
-      "value": "research-agent-artifacts"
-    },
-    "clerkIssuer": {
-      "value": "https://your-production-clerk-domain"
-    },
-    "clerkJwksUrl": {
-      "value": "https://your-production-clerk-domain/.well-known/jwks.json"
-    }
+    "environmentName": { "value": "prod" },
+    "registryName": { "value": "YOUR_ACR_NAME" },
+    "apiImage": { "value": "YOUR_ACR.azurecr.io/research-agent-api:TAG" },
+    "workerImage": { "value": "YOUR_ACR.azurecr.io/research-agent-api:TAG" },
+    "webImage": { "value": "YOUR_ACR.azurecr.io/research-agent-web:TAG" },
+    "mongodbUri": { "value": "DO_NOT_COMMIT_REAL_VALUE" },
+    "mongodbDatabase": { "value": "research_agent" },
+    "hmacSecret": { "value": "DO_NOT_COMMIT_REAL_VALUE" },
+    "upstashRedisRestUrl": { "value": "DO_NOT_COMMIT_REAL_VALUE" },
+    "upstashRedisRestToken": { "value": "DO_NOT_COMMIT_REAL_VALUE" },
+    "deepseekApiKey": { "value": "DO_NOT_COMMIT_REAL_VALUE" },
+    "tavilyApiKey": { "value": "DO_NOT_COMMIT_REAL_VALUE" },
+    "authEnabled": { "value": false },
+    "clerkIssuer": { "value": "" },
+    "clerkJwksUrl": { "value": "" },
+    "clerkAudience": { "value": "" },
+    "clerkPublishableKey": { "value": "" },
+    "clerkSecretKey": { "value": "" },
+    "azureBlobConnectionString": { "value": "" },
+    "azureBlobContainer": { "value": "research-agent-artifacts" },
+    "x402Enabled": { "value": false },
+    "x402CommerceEndpoint": { "value": "" },
+    "x402ProviderAllowlist": { "value": "" }
   }
 }

@@ -44,6 +44,7 @@ Thumbs.db
 # Local artifacts
 *.local
 coverage/
+apps/api/storage/
 implementation_guide.md
 infra/azure/main.parameters.local.json
 

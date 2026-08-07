@@ -1,28 +1,30 @@
-@description('Azure region for the Container Apps environment.')
+@description('Azure region for the complete application stack.')
 param location string = resourceGroup().location
 
 @description('Short environment name, for example prod or staging.')
 param environmentName string = 'prod'
 
-@description('Container image for the FastAPI API.')
+@description('Name of an existing Azure Container Registry in this resource group.')
+param registryName string
+
+@description('Full ACR image reference for the FastAPI API.')
 param apiImage string
 
-@description('Container image for the research worker.')
+@description('Full ACR image reference for the research worker. Usually the same image as apiImage.')
 param workerImage string
 
-@description('Public Vercel frontend origin, for example https://example.vercel.app.')
-param frontendOrigin string
+@description('Full ACR image reference for the Next.js web application.')
+param webImage string
 
 @secure()
-@description('Supabase runtime DATABASE_URL.')
-param databaseUrl string
+@description('MongoDB Atlas connection URI.')
+param mongodbUri string
+
+@description('MongoDB database name.')
+param mongodbDatabase string = 'research_agent'
 
 @secure()
-@description('Supabase migration connection URL. Stored for operational use; migrations are run manually.')
-param migrationsDatabaseUrl string
-
-@secure()
-@description('Strong API HMAC secret.')
+@description('Strong API HMAC secret, at least 32 characters.')
 param hmacSecret string
 
 @secure()
@@ -34,33 +36,134 @@ param upstashRedisRestUrl string
 param upstashRedisRestToken string
 
 @secure()
-@description('Azure Blob Storage connection string for artifact storage.')
-param azureBlobConnectionString string = ''
+@description('DeepSeek API key.')
+param deepseekApiKey string
 
-@description('Azure Blob container for artifact storage.')
-param azureBlobContainer string = 'research-agent-artifacts'
+@secure()
+@description('Tavily API key.')
+param tavilyApiKey string
 
-@description('Clerk production issuer/domain.')
-param clerkIssuer string
+@description('Require Clerk authentication. False creates an explicit anonymous prototype deployment.')
+param authEnabled bool = false
 
-@description('Clerk production JWKS URL.')
-param clerkJwksUrl string
+@description('Clerk issuer. Required when authEnabled is true.')
+param clerkIssuer string = ''
+
+@description('Clerk JWKS URL. Required when authEnabled is true.')
+param clerkJwksUrl string = ''
 
 @description('Optional Clerk JWT audience.')
 param clerkAudience string = ''
 
-@description('Optional container registry server, for example myregistry.azurecr.io. Leave empty for public images.')
-param registryServer string = ''
-
-@description('Optional container registry username.')
-param registryUsername string = ''
+@description('Clerk publishable key compiled into and supplied to the web app when auth is enabled.')
+param clerkPublishableKey string = ''
 
 @secure()
-@description('Optional container registry password.')
-param registryPassword string = ''
+@description('Clerk server secret key when auth is enabled.')
+param clerkSecretKey string = ''
+
+@secure()
+@description('Optional Azure Blob Storage connection string for browser artifacts.')
+param azureBlobConnectionString string = ''
+
+@description('Azure Blob container for browser artifacts.')
+param azureBlobContainer string = 'research-agent-artifacts'
+
+@description('Enable x402 commerce requests.')
+param x402Enabled bool = false
+
+@description('HTTPS x402 commerce endpoint. Required when x402Enabled is true.')
+param x402CommerceEndpoint string = ''
+
+@description('Comma-separated x402 provider host allowlist.')
+param x402ProviderAllowlist string = ''
 
 var namePrefix = 'research-agent-${environmentName}'
-var hasRegistry = !empty(registryServer)
+var apiName = '${namePrefix}-api'
+var webName = '${namePrefix}-web'
+var workerName = '${namePrefix}-worker'
+
+resource registry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
+  name: registryName
+}
+
+resource pullIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: '${namePrefix}-pull'
+  location: location
+}
+
+var acrPullRoleDefinitionId = subscriptionResourceId(
+  'Microsoft.Authorization/roleDefinitions',
+  '7f951dda-4ed3-4680-a7ca-43fe172d538d'
+)
+
+resource acrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(registry.id, pullIdentity.id, acrPullRoleDefinitionId)
+  scope: registry
+  properties: {
+    principalId: pullIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: acrPullRoleDefinitionId
+  }
+}
+
+resource outboundIp 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
+  name: '${namePrefix}-egress-ip'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static'
+  }
+}
+
+resource natGateway 'Microsoft.Network/natGateways@2023-11-01' = {
+  name: '${namePrefix}-nat'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    idleTimeoutInMinutes: 10
+    publicIpAddresses: [
+      {
+        id: outboundIp.id
+      }
+    ]
+  }
+}
+
+resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
+  name: '${namePrefix}-vnet'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.20.0.0/16'
+      ]
+    }
+  }
+}
+
+resource infrastructureSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-11-01' = {
+  parent: vnet
+  name: 'container-apps-infrastructure'
+  properties: {
+    addressPrefix: '10.20.0.0/23'
+    natGateway: {
+      id: natGateway.id
+    }
+    delegations: [
+      {
+        name: 'container-apps-delegation'
+        properties: {
+          serviceName: 'Microsoft.App/environments'
+        }
+      }
+    ]
+  }
+}
 
 resource logs 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: '${namePrefix}-logs'
@@ -77,6 +180,10 @@ resource appEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: '${namePrefix}-env'
   location: location
   properties: {
+    vnetConfiguration: {
+      infrastructureSubnetId: infrastructureSubnet.id
+      internal: false
+    }
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
@@ -87,43 +194,50 @@ resource appEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
-var commonSecrets = [
+var requiredSecrets = [
   {
-    name: 'database-url'
-    value: databaseUrl
-  }
-  {
-    name: 'migrations-database-url'
-    value: migrationsDatabaseUrl
+    name: 'mongodb-uri'
+    value: mongodbUri
   }
   {
     name: 'hmac-secret'
     value: hmacSecret
   }
   {
-    name: 'upstash-redis-rest-url'
+    name: 'upstash-url'
     value: upstashRedisRestUrl
   }
   {
-    name: 'upstash-redis-rest-token'
+    name: 'upstash-token'
     value: upstashRedisRestToken
   }
   {
-    name: 'azure-blob-connection-string'
+    name: 'deepseek-key'
+    value: deepseekApiKey
+  }
+  {
+    name: 'tavily-key'
+    value: tavilyApiKey
+  }
+]
+
+var blobSecrets = empty(azureBlobConnectionString) ? [] : [
+  {
+    name: 'blob-connection'
     value: azureBlobConnectionString
   }
 ]
 
-var registrySecrets = hasRegistry ? [
+var clerkSecrets = authEnabled ? [
   {
-    name: 'registry-password'
-    value: registryPassword
+    name: 'clerk-secret-key'
+    value: clerkSecretKey
   }
 ] : []
 
-var secretRefs = concat(commonSecrets, registrySecrets)
+var allSecrets = concat(requiredSecrets, blobSecrets, clerkSecrets)
 
-var commonEnv = [
+var commonApiEnv = [
   {
     name: 'APP_NAME'
     value: 'Research Agent Backend'
@@ -138,11 +252,15 @@ var commonEnv = [
   }
   {
     name: 'FRONTEND_ORIGIN'
-    value: frontendOrigin
+    value: ''
   }
   {
     name: 'AUTH_REQUIRED'
-    value: 'true'
+    value: string(authEnabled)
+  }
+  {
+    name: 'ALLOW_ANONYMOUS_PRODUCTION'
+    value: string(!authEnabled)
   }
   {
     name: 'CLERK_ISSUER'
@@ -158,19 +276,27 @@ var commonEnv = [
   }
   {
     name: 'STORAGE_BACKEND'
-    value: 'postgres'
+    value: 'mongodb'
   }
   {
     name: 'AUTO_CREATE_DATABASE_SCHEMA'
     value: 'false'
   }
   {
-    name: 'DATABASE_URL'
-    secretRef: 'database-url'
+    name: 'MONGODB_URI'
+    secretRef: 'mongodb-uri'
   }
   {
-    name: 'MIGRATIONS_DATABASE_URL'
-    secretRef: 'migrations-database-url'
+    name: 'MONGODB_DATABASE'
+    value: mongodbDatabase
+  }
+  {
+    name: 'MONGODB_APP_NAME'
+    value: 'ResearchAgentAzure'
+  }
+  {
+    name: 'MONGODB_SERVER_SELECTION_TIMEOUT_MS'
+    value: '10000'
   }
   {
     name: 'HMAC_SECRET'
@@ -190,23 +316,39 @@ var commonEnv = [
   }
   {
     name: 'UPSTASH_REDIS_REST_URL'
-    secretRef: 'upstash-redis-rest-url'
+    secretRef: 'upstash-url'
   }
   {
     name: 'UPSTASH_REDIS_REST_TOKEN'
-    secretRef: 'upstash-redis-rest-token'
+    secretRef: 'upstash-token'
   }
   {
-    name: 'OBJECT_STORAGE_BUCKET'
-    value: azureBlobContainer
+    name: 'DEEPSEEK_API_KEY'
+    secretRef: 'deepseek-key'
+  }
+  {
+    name: 'DEEPSEEK_BASE_URL'
+    value: 'https://api.deepseek.com'
+  }
+  {
+    name: 'DEEPSEEK_MODEL'
+    value: 'deepseek-chat'
+  }
+  {
+    name: 'TAVILY_API_KEY'
+    secretRef: 'tavily-key'
+  }
+  {
+    name: 'BROWSER_HEADLESS'
+    value: 'true'
+  }
+  {
+    name: 'BROWSER_ARTIFACT_DIR'
+    value: '/tmp/research-browser'
   }
   {
     name: 'ARTIFACT_STORAGE_BACKEND'
     value: empty(azureBlobConnectionString) ? 'none' : 'azure_blob'
-  }
-  {
-    name: 'AZURE_BLOB_CONNECTION_STRING'
-    secretRef: 'azure-blob-connection-string'
   }
   {
     name: 'AZURE_BLOB_CONTAINER'
@@ -221,12 +363,16 @@ var commonEnv = [
     value: 'base-sepolia,base'
   }
   {
-    name: 'MAX_PAYMENT_PIN_ATTEMPTS'
-    value: '5'
+    name: 'X402_ENABLED'
+    value: string(x402Enabled)
   }
   {
-    name: 'PAYMENT_PIN_LOCK_SECONDS'
-    value: '900'
+    name: 'X402_COMMERCE_ENDPOINT'
+    value: x402CommerceEndpoint
+  }
+  {
+    name: 'X402_PROVIDER_ALLOWLIST'
+    value: x402ProviderAllowlist
   }
   {
     name: 'LOG_LEVEL'
@@ -234,38 +380,74 @@ var commonEnv = [
   }
 ]
 
+var blobEnv = empty(azureBlobConnectionString) ? [] : [
+  {
+    name: 'AZURE_BLOB_CONNECTION_STRING'
+    secretRef: 'blob-connection'
+  }
+]
+
+var apiEnv = concat(commonApiEnv, blobEnv)
+
 resource api 'Microsoft.App/containerApps@2024-03-01' = {
-  name: '${namePrefix}-api'
+  name: apiName
   location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${pullIdentity.id}': {}
+    }
+  }
   properties: {
     managedEnvironmentId: appEnv.id
     configuration: {
       activeRevisionsMode: 'Single'
       ingress: {
-        external: true
+        external: false
         targetPort: 8000
         transport: 'auto'
         allowInsecure: false
       }
-      secrets: secretRefs
-      registries: hasRegistry ? [
+      secrets: allSecrets
+      registries: [
         {
-          server: registryServer
-          username: registryUsername
-          passwordSecretRef: 'registry-password'
+          server: registry.properties.loginServer
+          identity: pullIdentity.id
         }
-      ] : []
+      ]
     }
     template: {
       containers: [
         {
           name: 'api'
           image: apiImage
-          env: commonEnv
+          env: apiEnv
           resources: {
-            cpu: json('0.5')
-            memory: '1Gi'
+            cpu: json('1.0')
+            memory: '2Gi'
           }
+          probes: [
+            {
+              type: 'Liveness'
+              httpGet: {
+                path: '/v1/health/live'
+                port: 8000
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 15
+              periodSeconds: 30
+            }
+            {
+              type: 'Readiness'
+              httpGet: {
+                path: '/v1/health/ready'
+                port: 8000
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 20
+              periodSeconds: 15
+            }
+          ]
         }
       ]
       scale: {
@@ -276,7 +458,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
             name: 'http-scale'
             http: {
               metadata: {
-                concurrentRequests: '50'
+                concurrentRequests: '40'
               }
             }
           }
@@ -284,33 +466,46 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
       }
     }
   }
+  dependsOn: [
+    acrPull
+  ]
 }
 
 resource worker 'Microsoft.App/containerApps@2024-03-01' = {
-  name: '${namePrefix}-worker'
+  name: workerName
   location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${pullIdentity.id}': {}
+    }
+  }
   properties: {
     managedEnvironmentId: appEnv.id
     configuration: {
       activeRevisionsMode: 'Single'
-      secrets: secretRefs
-      registries: hasRegistry ? [
+      secrets: allSecrets
+      registries: [
         {
-          server: registryServer
-          username: registryUsername
-          passwordSecretRef: 'registry-password'
+          server: registry.properties.loginServer
+          identity: pullIdentity.id
         }
-      ] : []
+      ]
     }
     template: {
       containers: [
         {
           name: 'worker'
           image: workerImage
-          env: commonEnv
+          command: [
+            'python'
+            '-m'
+            'app.workers.research_worker'
+          ]
+          env: apiEnv
           resources: {
-            cpu: json('0.5')
-            memory: '1Gi'
+            cpu: json('1.0')
+            memory: '2Gi'
           }
         }
       ]
@@ -320,8 +515,139 @@ resource worker 'Microsoft.App/containerApps@2024-03-01' = {
       }
     }
   }
+  dependsOn: [
+    acrPull
+  ]
 }
 
-output apiFqdn string = api.properties.configuration.ingress.fqdn
-output apiUrl string = 'https://${api.properties.configuration.ingress.fqdn}'
+var webSecrets = authEnabled ? [
+  {
+    name: 'clerk-secret-key'
+    value: clerkSecretKey
+  }
+] : []
+
+var webEnv = concat([
+  {
+    name: 'NODE_ENV'
+    value: 'production'
+  }
+  {
+    name: 'PORT'
+    value: '3000'
+  }
+  {
+    name: 'HOSTNAME'
+    value: '0.0.0.0'
+  }
+  {
+    name: 'BACKEND_API_URL'
+    value: 'http://${apiName}'
+  }
+  {
+    name: 'NEXT_PUBLIC_API_URL'
+    value: '/api/backend'
+  }
+  {
+    name: 'NEXT_PUBLIC_AUTH_ENABLED'
+    value: string(authEnabled)
+  }
+  {
+    name: 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY'
+    value: clerkPublishableKey
+  }
+], authEnabled ? [
+  {
+    name: 'CLERK_SECRET_KEY'
+    secretRef: 'clerk-secret-key'
+  }
+] : [])
+
+resource web 'Microsoft.App/containerApps@2024-03-01' = {
+  name: webName
+  location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${pullIdentity.id}': {}
+    }
+  }
+  properties: {
+    managedEnvironmentId: appEnv.id
+    configuration: {
+      activeRevisionsMode: 'Single'
+      ingress: {
+        external: true
+        targetPort: 3000
+        transport: 'auto'
+        allowInsecure: false
+      }
+      secrets: webSecrets
+      registries: [
+        {
+          server: registry.properties.loginServer
+          identity: pullIdentity.id
+        }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          name: 'web'
+          image: webImage
+          env: webEnv
+          resources: {
+            cpu: json('0.5')
+            memory: '1Gi'
+          }
+          probes: [
+            {
+              type: 'Liveness'
+              httpGet: {
+                path: '/'
+                port: 3000
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 10
+              periodSeconds: 30
+            }
+            {
+              type: 'Readiness'
+              httpGet: {
+                path: '/'
+                port: 3000
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 10
+              periodSeconds: 15
+            }
+          ]
+        }
+      ]
+      scale: {
+        minReplicas: 1
+        maxReplicas: 4
+        rules: [
+          {
+            name: 'http-scale'
+            http: {
+              metadata: {
+                concurrentRequests: '60'
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+  dependsOn: [
+    acrPull
+    api
+  ]
+}
+
+output webUrl string = 'https://${web.properties.configuration.ingress.fqdn}'
+output apiInternalName string = api.name
+output atlasAllowlistIp string = outboundIp.properties.ipAddress
+output containerRegistry string = registry.properties.loginServer
 output containerAppsEnvironmentName string = appEnv.name

@@ -139,15 +139,15 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
   }
 
   return (
-    <div className="w-full max-w-[430px] rounded-[28px] border border-white/72 bg-white/58 p-6 shadow-[0_22px_64px_rgba(44,57,72,0.14)] backdrop-blur-2xl sm:p-8">
+    <div className="w-full max-w-[430px] rounded-2xl border border-white/[0.1] bg-[#1b1b1b] p-6 shadow-[0_22px_64px_rgba(0,0,0,0.35)] sm:p-8">
       <div className="mb-6 text-center">
-        <div className="mx-auto grid size-14 place-items-center rounded-2xl border border-white/80 bg-white/88 text-[#201819] shadow-[0_12px_28px_rgba(44,57,72,0.12)]">
+        <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#7d6cff] text-white shadow-[0_12px_28px_rgba(125,108,255,0.2)]">
           <ShieldCheck className="size-7" />
         </div>
-        <h1 className="mt-6 font-inter text-2xl font-black tracking-tight text-[#171111]">
+        <h1 className="mt-6 font-inter text-2xl font-black tracking-tight text-white">
           {isSignIn ? "Sign in" : "Create workspace"}
         </h1>
-        <p className="mx-auto mt-2 max-w-[290px] text-sm leading-6 text-[#6b5757]">
+        <p className="mx-auto mt-2 max-w-[290px] text-sm leading-6 text-[#a4a4a4]">
           {isSignIn ? "Open the Multi-Step Research Agent dashboard." : "Create your research orchestration workspace."}
         </p>
       </div>
@@ -158,28 +158,28 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
             type="button"
             onClick={continueWithGoogle}
             disabled={!ready || status === "loading"}
-            className="flex h-11 items-center justify-center gap-3 rounded-xl border border-black/10 bg-white/78 text-sm font-bold text-[#171111] shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-11 items-center justify-center gap-3 rounded-xl border border-white/[0.12] bg-[#242424] text-sm font-bold text-white transition hover:bg-[#2d2d2d] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <span className="grid size-5 place-items-center rounded-full bg-[#f5f5f5] text-xs font-black text-[#4285f4]">G</span>
             Continue with Google
           </button>
 
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-xs text-[#7b6969]">
-            <span className="h-px bg-black/10" />
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-xs text-[#888]">
+            <span className="h-px bg-white/[0.1]" />
             or
-            <span className="h-px bg-black/10" />
+            <span className="h-px bg-white/[0.1]" />
           </div>
 
-          <label className="grid gap-2 text-sm font-bold text-[#2b2020]">
+          <label className="grid gap-2 text-sm font-bold text-[#ddd]">
             Email address
-            <span className="flex h-11 items-center gap-2 rounded-xl border border-black/10 bg-white/78 px-3 shadow-sm focus-within:border-[#171111]">
-              <Mail className="size-4 text-[#7b6969]" />
+            <span className="flex h-11 items-center gap-2 rounded-xl border border-white/[0.1] bg-[#151515] px-3 focus-within:border-[#8576ff]">
+              <Mail className="size-4 text-[#888]" />
               <input
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 type="email"
                 autoComplete="email"
-                className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[#171111] outline-none placeholder:text-[#9c8f8f]"
+                className="min-w-0 flex-1 bg-transparent text-sm font-medium text-white outline-none placeholder:text-[#777]"
                 placeholder="you@example.com"
               />
             </span>
@@ -190,14 +190,14 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
               id="clerk-captcha"
               data-cl-theme="light"
               data-cl-size="flexible"
-              className="min-h-0 overflow-hidden rounded-xl [&:not(:empty)]:border [&:not(:empty)]:border-black/10 [&:not(:empty)]:bg-white/78 [&:not(:empty)]:p-2"
+              className="min-h-0 overflow-hidden rounded-xl [&:not(:empty)]:border [&:not(:empty)]:border-white/10 [&:not(:empty)]:bg-[#151515] [&:not(:empty)]:p-2"
             />
           ) : null}
 
           <button
             type="submit"
             disabled={!ready || status === "loading"}
-            className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#171111] text-sm font-black text-white shadow-[0_14px_32px_rgba(23,17,17,0.18)] transition hover:bg-[#2a2020] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#7d6cff] text-sm font-black text-white transition hover:bg-[#8b7dff] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {status === "loading" ? <Loader2 className="size-4 animate-spin" /> : null}
             Continue
@@ -205,14 +205,14 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
         </form>
       ) : (
         <form onSubmit={verifyCode} className="grid gap-4">
-          <label className="grid gap-2 text-sm font-bold text-[#2b2020]">
+          <label className="grid gap-2 text-sm font-bold text-[#ddd]">
             Verification code
             <input
               value={code}
               onChange={(event) => setCode(event.target.value)}
               inputMode="numeric"
               autoComplete="one-time-code"
-              className="h-12 rounded-xl border border-black/10 bg-white/78 px-3 text-center font-mono text-lg font-semibold tracking-[0.22em] text-[#171111] shadow-sm outline-none transition focus:border-[#171111]"
+              className="h-12 rounded-xl border border-white/10 bg-[#151515] px-3 text-center font-mono text-lg font-semibold tracking-[0.22em] text-white outline-none transition focus:border-[#8576ff]"
               placeholder="000000"
             />
           </label>
@@ -220,27 +220,27 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
           <button
             type="submit"
             disabled={!ready || status === "loading"}
-            className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#171111] text-sm font-black text-white shadow-[0_14px_32px_rgba(23,17,17,0.18)] transition hover:bg-[#2a2020] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#7d6cff] text-sm font-black text-white transition hover:bg-[#8b7dff] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {status === "loading" ? <Loader2 className="size-4 animate-spin" /> : null}
             Verify and continue
           </button>
 
-          <button type="button" onClick={() => setStep("email")} className="text-sm font-bold text-[#332323]/70 transition hover:text-[#171111]">
+          <button type="button" onClick={() => setStep("email")} className="text-sm font-bold text-[#999] transition hover:text-white">
             Use a different email
           </button>
         </form>
       )}
 
       {message ? (
-        <p className={`mt-4 rounded-xl border px-3 py-2 text-sm ${status === "error" ? "border-[#9d4b4b]/30 bg-[#fff0f0] text-[#7a2424]" : "border-[#2e6b52]/20 bg-[#ecfff7] text-[#255240]"}`}>
+        <p className={`mt-4 rounded-xl border px-3 py-2 text-sm ${status === "error" ? "border-[#6b3239] bg-[#2d191c] text-[#ffb8bf]" : "border-[#315544] bg-[#17231e] text-[#b9dfc8]"}`}>
           {message}
         </p>
       ) : null}
 
-      <div className="mt-6 border-t border-black/10 pt-5 text-center text-sm text-[#6b5757]">
+      <div className="mt-6 border-t border-white/[0.1] pt-5 text-center text-sm text-[#999]">
         {isSignIn ? "Do not have an account?" : "Already have an account?"}{" "}
-        <Link href={isSignIn ? "/signup" : "/signin"} className="font-black text-[#171111] hover:text-black">
+        <Link href={isSignIn ? "/signup" : "/signin"} className="font-black text-[#aaa0ff] hover:text-white">
           {isSignIn ? "Sign up" : "Sign in"}
         </Link>
       </div>

@@ -28,6 +28,7 @@ PATTERNS = [
     re.compile(r"UPSTASH_REDIS_REST_TOKEN\s*=\s*(?!replace-with)[A-Za-z0-9_\-]{12,}", re.IGNORECASE),
     re.compile(r"DefaultEndpointsProtocol=.*AccountKey=", re.IGNORECASE),
     re.compile(r"AZURE_BLOB_CONNECTION_STRING\s*=\s*(?!replace-with)[^\s]+", re.IGNORECASE),
+    re.compile(r"mongodb(?:\+srv)?://[^:\s/]+:(?!URL_ENCODED_PASSWORD|<db_password>)[^@\s]+@", re.IGNORECASE),
 ]
 
 

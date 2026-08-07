@@ -9,10 +9,11 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
-  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const authEnabled = process.env.NEXT_PUBLIC_AUTH_ENABLED === "true";
+  const publishableKey = authEnabled ? process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY : undefined;
   const document = (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 

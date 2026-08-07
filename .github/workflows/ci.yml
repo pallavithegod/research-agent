@@ -28,6 +28,9 @@ jobs:
       - name: Build frontend
         run: npm run build:web
 
+      - name: Check standalone frontend output
+        run: npm run check:standalone
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -35,13 +38,33 @@ jobs:
           cache: pip
 
       - name: Install API dependencies
-        run: pip install -r apps/api/requirements.txt
+        run: pip install -r apps/api/requirements-dev.txt
 
       - name: Check API syntax
         run: npm run check:api
 
+      - name: Test API behavior
+        working-directory: apps/api
+        run: pytest -q
+
       - name: Check scripts
         run: npm run check:scripts
 
+      - name: Check Azure deploy script syntax
+        shell: pwsh
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'scripts/deploy_azure.ps1'),
+            [ref]$null,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count) { $errors | ForEach-Object { Write-Error $_.Message }; exit 1 }
+
       - name: Secret scan
         run: npm run check:secrets
+
+      - name: Validate Azure infrastructure template
+        uses: azure/cli@v2
+        with:
+          inlineScript: az bicep build --file infra/azure/main.bicep

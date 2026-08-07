@@ -2,22 +2,25 @@ import { AuthCard } from "@/components/auth-card";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default function SignUpPage() {
+  if (process.env.NEXT_PUBLIC_AUTH_ENABLED !== "true") {
+    redirect("/");
+  }
   return (
-    <main id="main" className="relative min-h-screen overflow-hidden bg-[#eef6fb] text-[#171111]">
-      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/login-back.jpg')" }} aria-hidden="true" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.22)_45%,rgba(255,255,255,0.76))]" />
+    <main id="main" className="relative min-h-screen overflow-hidden bg-[#121212] text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(125,108,255,0.18),transparent_28rem)]" />
 
       <header className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-10 lg:px-16">
-        <Link href="/" className="inline-flex items-center gap-3 font-inter text-base font-black text-[#1c1717]">
-          <span className="grid size-9 place-items-center rounded-xl bg-white/72 p-1.5 shadow-lg shadow-black/10 backdrop-blur">
+        <Link href="/" className="inline-flex items-center gap-3 font-inter text-base font-black text-white">
+          <span className="grid size-9 place-items-center rounded-xl bg-[#7d6cff] p-1.5 shadow-lg shadow-[#7d6cff]/20">
             <Image src="/artificial.png" alt="" width={28} height={28} className="size-full object-contain" priority />
           </span>
           Research Agent
         </Link>
 
-        <Link href="/signin" className="hidden items-center gap-2 text-sm font-semibold text-[#332323]/64 transition hover:text-[#332323] sm:inline-flex">
+        <Link href="/signin" className="hidden items-center gap-2 text-sm font-semibold text-[#aaa] transition hover:text-white sm:inline-flex">
           <ArrowLeft className="size-4" />
           Sign in
         </Link>

@@ -1,24 +1,28 @@
 # Multi-Step Research Agent Backend
 
-Python/FastAPI backend scaffold for the project described in `D:\temp\grp proj 3\README.md` and the Mermaid architecture file currently present as `D:\temp\grp proj 3\archi.md`.
+Python/FastAPI backend for the multi-step research dashboard.
 
 The backend is intentionally production-shaped but local-friendly:
 
 - FastAPI API surface under `/v1`
-- Clerk JWT auth support, with local mock auth when `AUTH_REQUIRED=false`
-- Research job creation, planning, mock execution, event stream, cancellation, reports, and audit trail
+- Clerk JWT auth support, with a local development identity when `AUTH_REQUIRED=false`
+- LangGraph intake, execution, evidence-quality, and user-feedback workflows
+- Optional DeepSeek report writing and feedback-driven revisions
+- Quick, Deep, and Compare research modes with persisted source policies
+- Evidence-quality scoring, suggested follow-ups, and immutable report history
+- Research job creation, planning, deterministic fallback execution, event stream, cancellation, reports, and audit trail
 - Payment PIN hashing with Argon2id
-- x402-ready payment approval, tool-call, payment-term, and receipt models
+- x402 v1/v2 negotiation, scoped approval, wallet-signature settlement, and receipt persistence
 - Schedules, product research, price watches, checkout-intent review gates
 - Workflow template endpoint for dashboard/canvas integration
-- PostgreSQL-backed persistence for jobs, plans, events, reports, approvals, receipts, schedules, and Payment PIN hashes
+- MongoDB Atlas or PostgreSQL persistence for jobs, plans, events, reports, approvals, receipts, schedules, and Payment PIN hashes
 
 ## Manual Install
 
 From this folder:
 
 ```powershell
-cd "D:\temp\grp proj 3\project-dashboard\apps\api"
+cd "D:\multi-step-research\research-agent\apps\api"
 python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
@@ -34,13 +38,24 @@ STORAGE_BACKEND=postgres
 AUTO_CREATE_DATABASE_SCHEMA=true
 ```
 
+MongoDB Atlas alternative:
+
+```env
+STORAGE_BACKEND=mongodb
+MONGODB_URI=mongodb://USER:URL_ENCODED_PASSWORD@HOSTS/?ssl=true&replicaSet=REPLICA_SET&authSource=admin
+MONGODB_DATABASE=research_agent
+MONGODB_APP_NAME=ResearchAgent
+```
+
+Atlas must allow the API and worker outbound IPs in **Network Access**. Keep the URI only in `apps/api/.env` locally or the deployment secret manager in production.
+
 Create the database once, using your own Postgres shell/tool:
 
 ```sql
 CREATE DATABASE research_agent;
 ```
 
-For production, run migrations instead of automatic schema creation:
+For PostgreSQL production, run migrations instead of automatic schema creation:
 
 ```env
 AUTO_CREATE_DATABASE_SCHEMA=false
@@ -62,7 +77,7 @@ http://localhost:8000/v1/health
 
 ## Clerk Setup
 
-For local mock auth, leave:
+For local development without sign-in, leave:
 
 ```env
 AUTH_REQUIRED=false
@@ -83,14 +98,49 @@ Then send frontend requests with:
 Authorization: Bearer <clerk-session-token>
 ```
 
+## DeepSeek Setup
+
+DeepSeek is required for live answer generation. The API returns a clear `503` instead of inventing an answer when the key is missing. Evidence is collected through multi-provider search and direct parsing of several result websites. Bing RSS and DuckDuckGo work without credentials; add Brave or Tavily for higher reliability.
+
+```env
+DEEPSEEK_API_KEY=your-secret-key
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_TIMEOUT_SECONDS=45
+DEEPSEEK_MAX_RETRIES=2
+BRAVE_SEARCH_API_KEY=
+TAVILY_API_KEY=
+```
+
+The key belongs only in `apps/api/.env` for local work or your deployment secret manager. DeepSeek output cannot authorize payments or bypass the evidence quality gate. Failed or ungrounded revisions never overwrite the prior report.
+
+Run the backend test suite with:
+
+```powershell
+python -m pytest -q
+```
+
 ## Important Next Backend Steps
 
 1. Normalize the persisted-record MVP into dedicated tables for jobs, steps, reports, citations, evidence, provider calls, approvals, and receipts.
-2. Move `OrchestratorService.run_mock_research` into a durable worker queue.
-3. Replace `ToolGatewayService.mock_payment_terms` with real x402 provider calls.
+2. Move multi-site retrieval into a durable worker queue.
+3. Configure and allow-list a real x402 provider, then connect the frontend wallet signer.
 4. Add object storage for encrypted artifacts and signed URLs.
 5. Add OpenTelemetry/Sentry with prompt, payment, and PII redaction.
 6. Keep checkout disabled until approved retailer integrations and legal/security review exist.
+
+## x402 Setup
+
+The API never accepts a wallet private key. A provider first returns `402` terms, the user confirms a scoped approval with their Payment PIN, and the frontend wallet supplies a `Payment-Signature` for the retry. Enable only exact provider hosts:
+
+```env
+X402_ENABLED=true
+X402_PROVIDER_ALLOWLIST=paid-provider.example
+SUPPORTED_PAYMENT_ASSETS=USDC
+SUPPORTED_PAYMENT_NETWORKS=base-sepolia,base
+```
+
+Keep `X402_ENABLED=false` until a real provider endpoint and wallet signer are configured.
 
 ## Main API Surface
 
@@ -99,6 +149,9 @@ Authorization: Bearer <clerk-session-token>
 - `GET /v1/jobs/{job_id}`
 - `GET /v1/jobs/{job_id}/events`
 - `POST /v1/jobs/{job_id}/run`
+- `POST /v1/jobs/{job_id}/clarifications`
+- `POST /v1/jobs/{job_id}/decisions`
+- `POST /v1/jobs/{job_id}/feedback`
 - `POST /v1/jobs/{job_id}/cancel`
 - `GET /v1/jobs/{job_id}/audit`
 - `POST /v1/payment-pin`

@@ -161,6 +161,134 @@ button {
   display: none;
 }
 
+.main-scroll,
+.rail-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+
+.main-scroll::-webkit-scrollbar,
+.rail-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.main-scroll::-webkit-scrollbar-track,
+.rail-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.main-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.rail-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(142, 183, 165, 0.22);
+}
+
+.answer-enter {
+  animation: answer-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.message-enter {
+  animation: message-enter 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.product-card-enter {
+  opacity: 0;
+  animation: product-card-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.rail-empty-enter {
+  animation: answer-enter 420ms ease-out both;
+}
+
+.review-enter {
+  animation: review-enter 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.source-row-enter {
+  opacity: 0;
+  animation: source-row-enter 400ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.product-image {
+  opacity: 0;
+  transform: scale(0.97);
+  animation: product-image-enter 480ms 100ms ease-out forwards;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.product-card-enter:hover .product-image {
+  transform: scale(1.025);
+}
+
+@keyframes answer-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes message-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes product-card-enter {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes product-image-enter {
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes review-enter {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes source-row-enter {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.thinking-glow::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  width: 42%;
+  background: linear-gradient(90deg, transparent, rgba(184, 153, 255, 0.1), rgba(229, 220, 255, 0.42), rgba(184, 153, 255, 0.1), transparent);
+  filter: blur(5px);
+  animation: thinking-sweep 1.55s ease-in-out infinite;
+}
+
+.thinking-glow::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  width: 34%;
+  background: linear-gradient(90deg, transparent, #bba1ff, transparent);
+  box-shadow: 0 0 10px rgba(187, 161, 255, 0.8);
+  animation: thinking-sweep 1.55s ease-in-out infinite;
+}
+
+@keyframes thinking-sweep {
+  0% { transform: translateX(-135%); opacity: 0; }
+  18% { opacity: 1; }
+  82% { opacity: 1; }
+  100% { transform: translateX(340%); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking-glow::before,
+  .thinking-glow::after {
+    animation: none;
+  }
+}
+
 .focus-ring:focus-visible {
   outline: 2px solid var(--cyan);
   outline-offset: 3px;

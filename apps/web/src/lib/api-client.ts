@@ -3,7 +3,9 @@
 import { useAuth } from "@clerk/nextjs";
 import { useCallback } from "react";
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "/api/backend").replace(/\/$/, "");
+const clerkEnabled = process.env.NEXT_PUBLIC_AUTH_ENABLED === "true"
+  && Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 type ApiFetchOptions = RequestInit & {
   token?: string | null;
@@ -28,7 +30,15 @@ export async function apiFetch(path: string, options: ApiFetchOptions = {}) {
   });
 }
 
-export function useAuthenticatedApi() {
+export const useAuthenticatedApi = clerkEnabled ? useClerkAuthenticatedApi : useLocalApi;
+
+function useLocalApi() {
+  return useCallback(async function localApiFetch(path: string, options: RequestInit = {}) {
+    return apiFetch(path, options);
+  }, []);
+}
+
+function useClerkAuthenticatedApi() {
   const { getToken } = useAuth();
 
   return useCallback(async function authenticatedApiFetch(path: string, options: RequestInit = {}) {

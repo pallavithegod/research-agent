@@ -1,10 +1,10 @@
-import { BillingPageContent } from "@/components/soft-dashboard-sections";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { WorkspacePage } from "@/components/workspace-page";
 
 export default function BillingPage() {
   return (
     <DashboardShell>
-      <BillingPageContent />
+      <WorkspacePage page="billing" />
     </DashboardShell>
   );
 }

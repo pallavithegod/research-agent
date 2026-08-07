@@ -30,6 +30,8 @@ SENSITIVE_FIELD_MARKERS = {
     "authorization",
     "cookie",
     "database_url",
+    "mongodb_uri",
+    "connection_string",
     "hmac",
     "key",
 }

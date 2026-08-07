@@ -60,6 +60,9 @@ def run_forever() -> None:
     if not job_queue_service.is_enabled:
         raise RuntimeError("Research worker requires JOB_QUEUE_BACKEND=upstash.")
 
+    if settings.storage_backend == "mongodb":
+        store.ping()
+
     logger.info(
         "research_worker_started",
         extra={
